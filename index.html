@@ -1,0 +1,879 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faixa Viva — Monitoramento Inteligente da Faixa de Domínio</title>
+<style>
+  :root{
+    --bg:#ECEEE5;
+    --surface:#FFFFFF;
+    --surface-2:#F5F6EF;
+    --ink:#181A15;
+    --ink-muted:#565948;
+    --ink-faint:#888C74;
+    --border:#D8DACB;
+    --accent:#2C6B4A;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#DCEBDF;
+    --healthy:#3F8C57;
+    --warning:#B87A1F;
+    --critical:#AE3A2E;
+    --healthy-soft:#DEEEDF;
+    --warning-soft:#F3E5C8;
+    --critical-soft:#F4DBD7;
+    --font-display:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:"SF Mono","Cascadia Code","Roboto Mono",ui-monospace,Menlo,monospace;
+    --radius:3px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#101410; --surface:#191C16; --surface-2:#1D2018; --ink:#E9ECDF; --ink-muted:#A3A78F; --ink-faint:#6E7260;
+      --border:#2E331F; --accent:#5FBE7C; --accent-ink:#0C170E; --accent-soft:#20321F; --healthy:#5FBE7C; --warning:#E2A94D;
+      --critical:#E2695A; --healthy-soft:#1D2E1C; --warning-soft:#332918; --critical-soft:#332019;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#101410; --surface:#191C16; --surface-2:#1D2018; --ink:#E9ECDF; --ink-muted:#A3A78F; --ink-faint:#6E7260;
+    --border:#2E331F; --accent:#5FBE7C; --accent-ink:#0C170E; --accent-soft:#20321F; --healthy:#5FBE7C; --warning:#E2A94D;
+    --critical:#E2695A; --healthy-soft:#1D2E1C; --warning-soft:#332918; --critical-soft:#332019;
+  }
+  :root[data-theme="light"]{
+    --bg:#ECEEE5; --surface:#FFFFFF; --surface-2:#F5F6EF; --ink:#181A15; --ink-muted:#565948; --ink-faint:#888C74;
+    --border:#D8DACB; --accent:#2C6B4A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF; --healthy:#3F8C57; --warning:#B87A1F;
+    --critical:#AE3A2E; --healthy-soft:#DEEEDF; --warning-soft:#F3E5C8; --critical-soft:#F4DBD7;
+  }
+
+  *{box-sizing:border-box;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+
+  body{margin:0;}
+  .app{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:var(--bg);
+    min-height:100%;
+    padding:28px clamp(14px,3vw,40px) 60px;
+  }
+  h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  /* ---------- header ---------- */
+  .topbar{
+    display:flex; flex-wrap:wrap; gap:20px 28px; align-items:flex-end; justify-content:space-between;
+    padding-bottom:20px; margin-bottom:16px; border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand svg{flex:none;}
+  .brand-text h1{font-size:22px; font-weight:700; letter-spacing:-0.01em;}
+  .brand-sub{display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;}
+  .brand-sub span:first-child{font-size:13px; color:var(--ink-muted);}
+  .demo-tag{
+    font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-muted);
+    border:1px solid var(--border); border-radius:999px; padding:2px 9px; background:var(--surface-2);
+  }
+  .rodovia-switch-wrap{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .rodovia-switch-label{font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint);}
+  .rodovia-switch{display:flex; gap:6px; flex-wrap:wrap;}
+  .rodovia-btn{font-family:var(--font-body); font-size:12.5px; padding:6px 13px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink-muted); cursor:pointer;}
+  .rodovia-btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .rodovia-btn.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+
+  .kpis{display:flex; flex-wrap:wrap; gap:10px;}
+  .kpi{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:10px 16px; min-width:150px;
+  }
+  .kpi .kpi-label{font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-faint);}
+  .kpi .kpi-value{font-family:var(--font-mono); font-size:20px; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums;}
+  .kpi .kpi-sub{font-size:11.5px; color:var(--ink-muted); margin-top:2px; line-height:1.4;}
+
+  /* ---------- banners ---------- */
+  .banner-stack{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+  .season-banner, .context-banner{
+    border:1px solid var(--border); border-radius:var(--radius); padding:11px 16px; font-size:13px; color:var(--ink); line-height:1.55;
+  }
+  .season-banner{background:var(--warning-soft); border-left:3px solid var(--warning);}
+  .season-banner b{color:var(--warning);}
+  .context-banner{background:var(--accent-soft); border-left:3px solid var(--accent);}
+  .context-banner b{color:var(--accent);}
+
+  /* ---------- layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);
+    grid-template-areas:
+      "map detail"
+      "priority detail"
+      "alerts history";
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr; grid-template-areas:"map" "detail" "priority" "alerts" "history";}
+  }
+  .secondary-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;}
+  @media (max-width:820px){ .secondary-grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 18px 20px; min-width:0;
+  }
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .panel-head h2{font-size:14.5px; text-transform:uppercase; letter-spacing:0.04em;}
+  .panel-hint{font-size:12px; color:var(--ink-faint);}
+
+  .map-panel{grid-area:map;}
+  .detail-panel{grid-area:detail;}
+  .priority-panel{grid-area:priority;}
+  .alerts-panel{grid-area:alerts;}
+  .history-panel{grid-area:history;}
+
+  /* ---------- legend ---------- */
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-muted);}
+  .legend-item{display:flex; align-items:center; gap:6px;}
+  .swatch{width:10px; height:10px; border-radius:2px; flex:none;}
+
+  /* ---------- route strip (linear highway map) ---------- */
+  .route-strip-wrap{overflow-x:auto; margin-top:14px; padding-bottom:6px;}
+  .route-strip{display:flex; gap:3px; min-width:max-content;}
+  .route-seg{
+    border:1px solid transparent; border-radius:var(--radius); padding:9px 8px 8px; cursor:pointer;
+    text-align:left; font-family:var(--font-body); color:var(--ink); flex:none;
+    display:flex; flex-direction:column; gap:4px; min-height:74px; height:100%;
+  }
+  .route-seg:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .route-seg.selected{border-color:var(--ink); box-shadow:0 0 0 1px var(--ink) inset;}
+  .route-seg .seg-id{font-family:var(--font-mono); font-size:11.5px; font-weight:600; opacity:0.9;}
+  .route-seg .seg-km{font-size:9.5px; color:var(--ink-faint);}
+  .route-seg .seg-type{font-size:9.5px; letter-spacing:0.03em; text-transform:uppercase; opacity:0.75;}
+  .route-seg .seg-value{font-family:var(--font-mono); font-size:13px; font-weight:700; margin-top:auto; font-variant-numeric:tabular-nums;}
+  .tone-critico{background:var(--critical-soft); color:var(--critical);}
+  .tone-atencao{background:var(--warning-soft); color:var(--warning);}
+  .tone-estavel{background:var(--healthy-soft); color:var(--healthy);}
+  .tone-critico .seg-value,.tone-atencao .seg-value,.tone-estavel .seg-value{color:var(--ink);}
+  .route-ruler{display:flex; justify-content:space-between; font-size:10px; color:var(--ink-faint); margin-top:4px; font-family:var(--font-mono);}
+
+  /* ---------- detail panel ---------- */
+  .detail-title-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .detail-title-row h2{text-transform:none; font-size:17px; letter-spacing:0;}
+  .detail-crop{font-size:12.5px; color:var(--ink-muted); margin-top:3px;}
+  .badge{font-size:11px; font-weight:600; letter-spacing:0.02em; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .detail-stats{display:flex; gap:22px; margin:14px 0 4px; flex-wrap:wrap;}
+  .stat-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-faint);}
+  .stat-value{font-family:var(--font-mono); font-size:19px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums;}
+  .chart-wrap{margin:14px 0 10px;}
+  .chart-wrap svg{width:100%; height:auto; display:block;}
+  .detail-note{font-size:12.5px; color:var(--ink-muted); line-height:1.5; margin-bottom:10px;}
+  .action-box{
+    background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--accent);
+    border-radius:var(--radius); padding:10px 12px; font-size:12.5px; line-height:1.5;
+  }
+  .action-box b{display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-muted); margin-bottom:3px; font-weight:600;}
+
+  /* ---------- priority list ---------- */
+  .filters{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{font-family:var(--font-body); font-size:12px; padding:5px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink-muted); cursor:pointer;}
+  .chip:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .chip.active{background:var(--ink); border-color:var(--ink); color:var(--bg);}
+  .p-list{display:flex; flex-direction:column; gap:1px; border-top:1px solid var(--border); margin-top:12px;}
+  .p-row{
+    display:grid; grid-template-columns:16px 1fr auto auto auto; align-items:center; gap:14px;
+    padding:10px 4px; border-bottom:1px solid var(--border); background:none; border-left:none; border-right:none; border-top:none;
+    width:100%; text-align:left; font-family:var(--font-body); color:var(--ink); cursor:pointer;
+  }
+  .p-row:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+  .p-row:hover{background:var(--surface-2);}
+  .p-stripe{width:6px; height:24px; border-radius:2px;}
+  .p-main .p-id{font-family:var(--font-mono); font-size:12.5px; font-weight:700; margin-right:8px;}
+  .p-main .p-crop{font-size:12.5px; color:var(--ink-muted);}
+  .p-cause{font-size:12px; color:var(--ink-muted); text-align:right; max-width:220px;}
+  .p-score{font-family:var(--font-mono); font-size:13px; font-weight:600; text-align:right; font-variant-numeric:tabular-nums;}
+  .p-badge{justify-self:end;}
+  @media (max-width:640px){ .p-row{grid-template-columns:10px 1fr auto;} .p-cause{display:none;} }
+
+  /* ---------- alerts ---------- */
+  .alert-list{display:flex; flex-direction:column; gap:10px; margin-top:12px;}
+  .alert-item{display:flex; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);}
+  .alert-dot{width:8px; height:8px; border-radius:50%; margin-top:5px; flex:none;}
+  .alert-text{font-size:12.5px; line-height:1.5;}
+  .alert-text b{font-family:var(--font-mono);}
+  .alert-meta{font-size:11px; color:var(--ink-faint); margin-top:2px;}
+
+  /* ---------- history table ---------- */
+  .table-wrap{overflow-x:auto; margin-top:12px;}
+  table{border-collapse:collapse; width:100%; min-width:560px; font-size:12.5px;}
+  th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-faint); padding:0 10px 8px 0; border-bottom:1px solid var(--border); font-weight:600;}
+  td{padding:9px 10px 9px 0; border-bottom:1px solid var(--border); vertical-align:top; color:var(--ink);}
+  td.mono{white-space:nowrap;}
+  .result-up{color:var(--healthy); font-family:var(--font-mono);}
+
+  /* ---------- cost comparison ---------- */
+  .cost-row{margin-bottom:16px;}
+  .cost-row-label{font-size:12px; color:var(--ink-muted); margin-bottom:8px;}
+  .cost-bar{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .cost-bar-name{font-size:11px; color:var(--ink-faint); width:112px; flex:none;}
+  .cost-bar-fill-wrap{flex:1; background:var(--surface-2); border-radius:2px; height:10px; overflow:hidden;}
+  .cost-bar-fill{height:100%; border-radius:2px;}
+  .cost-bar-value{font-family:var(--font-mono); font-size:12px; width:88px; text-align:right; flex:none; font-variant-numeric:tabular-nums;}
+  .cost-callout{
+    margin-top:16px; background:var(--accent-soft); border:1px solid var(--border); border-left:3px solid var(--accent);
+    border-radius:var(--radius); padding:10px 12px; font-size:12.5px; line-height:1.5;
+  }
+  .cost-callout b{color:var(--accent);}
+  .cost-note{font-size:11px; color:var(--ink-faint); margin-top:10px; line-height:1.5;}
+
+  /* ---------- ROI calculator ---------- */
+  .roi-calc{margin-top:20px; padding-top:16px; border-top:1px solid var(--border);}
+  .roi-calc-label{font-size:12px; color:var(--ink-muted); margin-bottom:10px;}
+  .roi-presets{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .roi-preset{font-family:var(--font-body); font-size:11.5px; padding:5px 11px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink-muted); cursor:pointer;}
+  .roi-preset:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .roi-preset.active{background:var(--ink); border-color:var(--ink); color:var(--bg);}
+  .roi-slider-row{display:flex; align-items:center; gap:12px;}
+  .roi-slider-row input[type="range"]{flex:1; accent-color:var(--accent); height:4px;}
+  .roi-km-value{font-size:13px; width:76px; text-align:right; flex:none;}
+  .roi-output{margin-top:14px; font-size:13.5px; line-height:1.5;}
+  .roi-output b{font-family:var(--font-mono); font-size:17px; color:var(--accent);}
+
+  /* ---------- fonte tag ---------- */
+  .fonte-tag{
+    display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-muted);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:3px 10px; margin-top:8px;
+  }
+  .fonte-tag .fonte-dot{width:6px; height:6px; border-radius:50%; background:var(--accent);}
+
+  /* ---------- ordem de serviço ---------- */
+  .os-btn{
+    margin-top:10px; font-family:var(--font-body); font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:var(--radius);
+    border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink); cursor:pointer; width:100%;
+  }
+  .os-btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+  .os-confirm{
+    margin-top:10px; background:var(--healthy-soft); border:1px solid var(--border); border-left:3px solid var(--healthy);
+    border-radius:var(--radius); padding:10px 12px; font-size:12.5px; line-height:1.5;
+  }
+  .os-confirm b{display:block; color:var(--healthy); font-family:var(--font-mono); font-size:12.5px; margin-bottom:3px;}
+
+  /* ---------- integration list ---------- */
+  .integration-list{list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:12px;}
+  .integration-list li{display:flex; gap:10px; font-size:12.5px; line-height:1.55; color:var(--ink-muted);}
+  .integration-list li::before{content:""; width:6px; height:6px; margin-top:6px; border-radius:1px; background:var(--accent); flex:none;}
+  .integration-list li b{color:var(--ink); font-weight:600;}
+
+  /* ---------- tech note ---------- */
+  .tech-note{margin-top:20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:4px 18px;}
+  .tech-note summary{cursor:pointer; padding:14px 0; font-size:13px; font-weight:600; list-style:none; display:flex; align-items:center; gap:8px;}
+  .tech-note summary::-webkit-details-marker{display:none;}
+  .tech-note summary::before{content:"+"; font-family:var(--font-mono); color:var(--accent); font-weight:700;}
+  .tech-note[open] summary::before{content:"–";}
+  .tech-note-body{padding-bottom:16px; font-size:12.5px; line-height:1.65; color:var(--ink-muted);}
+  .tech-note-body ul{margin:8px 0; padding-left:18px;}
+  .tech-note-body li{margin-bottom:5px;}
+  .tech-note-body strong{color:var(--ink);}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="14" height="14" rx="1.5" fill="var(--healthy)"></rect>
+        <rect x="19" y="1" width="14" height="14" rx="1.5" fill="var(--warning)"></rect>
+        <rect x="1" y="19" width="14" height="14" rx="1.5" fill="var(--accent)"></rect>
+        <rect x="19" y="19" width="14" height="14" rx="1.5" fill="var(--critical)"></rect>
+      </svg>
+      <div class="brand-text">
+        <h1>Faixa Viva</h1>
+        <div class="brand-sub">
+          <span>Monitoramento inteligente da faixa de domínio</span>
+          <span class="demo-tag">Protótipo · proposta para o Desafio de Inovação Motiva</span>
+        </div>
+        <div class="rodovia-switch-wrap">
+          <span class="rodovia-switch-label">Rodovia:</span>
+          <div class="rodovia-switch" id="rodoviaSwitch"></div>
+        </div>
+      </div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+
+  <div class="banner-stack">
+    <div class="context-banner" id="contextBanner"></div>
+    <div class="season-banner" id="seasonBanner"></div>
+  </div>
+
+  <div class="layout">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2 id="mapHeading">Mapa da rodovia</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="panel-hint" id="mapHint"></div>
+      <div class="route-strip-wrap">
+        <div class="route-strip" id="routeStrip"></div>
+      </div>
+      <div class="route-ruler" id="routeRuler"></div>
+    </section>
+
+    <aside class="panel detail-panel" id="detailPanel"></aside>
+
+    <section class="panel priority-panel">
+      <div class="panel-head">
+        <h2>Prioridade de intervenção</h2>
+        <div class="filters" id="filters"></div>
+      </div>
+      <div class="p-list" id="priorityList"></div>
+    </section>
+
+    <section class="panel alerts-panel">
+      <div class="panel-head"><h2>Alertas recentes</h2></div>
+      <div class="alert-list" id="alertList"></div>
+    </section>
+
+    <section class="panel history-panel">
+      <div class="panel-head"><h2>Registro de roçadas e intervenções</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Trecho</th><th>Causa</th><th>Ação aplicada</th><th>Resultado</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="secondary-grid">
+    <section class="panel cost-panel">
+      <div class="panel-head"><h2>Manutenção fixa vs. orientada por dados</h2></div>
+      <div class="cost-row">
+        <div class="cost-row-label">Frequência de roçada por km/ano</div>
+        <div class="cost-bar"><span class="cost-bar-name">Cronograma fixo</span><div class="cost-bar-fill-wrap"><div class="cost-bar-fill" style="width:100%;background:var(--ink-faint);"></div></div><span class="cost-bar-value mono">12x/ano</span></div>
+        <div class="cost-bar"><span class="cost-bar-name">Orientado por dados</span><div class="cost-bar-fill-wrap"><div class="cost-bar-fill" style="width:42%;background:var(--accent);"></div></div><span class="cost-bar-value mono">~5x/ano</span></div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-row-label">Custo estimado por km/ano</div>
+        <div class="cost-bar"><span class="cost-bar-name">Cronograma fixo</span><div class="cost-bar-fill-wrap"><div class="cost-bar-fill" style="width:100%;background:var(--ink-faint);"></div></div><span class="cost-bar-value mono">R$ 10.800</span></div>
+        <div class="cost-bar"><span class="cost-bar-name">Orientado por dados</span><div class="cost-bar-fill-wrap"><div class="cost-bar-fill" style="width:42%;background:var(--accent);"></div></div><span class="cost-bar-value mono">R$ 4.500</span></div>
+      </div>
+      <div class="cost-callout"><b>Economia estimada: ~58%</b> na frequência de roçada, evitando intervenção em segmentos sem necessidade real.</div>
+      <div class="cost-note">Frequência e economia (%) são valores de referência ilustrativos, a calibrar com os custos operacionais reais da concessionária. Já verificado no SICRO/DNIT (Abr/2026, tabela SP): hidrossemeadura R$ 7,05/m² e preenchimento de erosão em talude R$ 505,28/m³ — usados como referência real nas ações recomendadas para taludes.</div>
+
+      <div class="roi-calc">
+        <div class="roi-calc-label">Simulador — economia estimada por escala</div>
+        <div class="roi-presets" id="roiPresets"></div>
+        <div class="roi-slider-row">
+          <input type="range" min="20" max="3000" step="1" value="96" id="roiSlider" aria-label="Extensão em km">
+          <span class="roi-km-value mono" id="roiKmValue">96 km</span>
+        </div>
+        <div class="roi-output">Economia estimada: <b id="roiSavings">R$ 605 mil/ano</b></div>
+      </div>
+    </section>
+
+    <section class="panel integration-panel">
+      <div class="panel-head"><h2>Como se integra à operação</h2></div>
+      <ul class="integration-list">
+        <li><b>Reaproveita investimento já previsto:</b> a Fernão Dias já tem câmeras de detecção automática no pacote de investimento (implantação em até 24 meses) — o Faixa Viva usa essa mesma infraestrutura para os acostamentos, sem hardware adicional.</li>
+        <li><b>Centro de Controle Operacional:</b> alertas geolocalizados por km chegam ao CCO no mesmo fluxo hoje usado para tráfego e incidentes.</li>
+        <li><b>Evidência para auditorias:</b> registro automático de antes/depois por trecho apoia a comprovação do cumprimento das obrigações contratuais de manutenção da faixa de domínio.</li>
+        <li><b>Escala de equipes por risco:</b> conservação e roçada priorizadas pelo risco real do trecho, não por um calendário fixo.</li>
+        <li><b>Aplicativo de campo:</b> equipes recebem o km exato a tratar e o motivo do alerta, sem depender de inspeção visual prévia.</li>
+        <li><b>Uso racional de recursos:</b> apoia metas de sustentabilidade ao reduzir deslocamento, combustível e insumos de revegetação.</li>
+      </ul>
+    </section>
+  </div>
+
+  <details class="tech-note">
+    <summary>Como isso funcionaria com dados reais</summary>
+    <div class="tech-note-body">
+      Esta tela usa dados sintéticos, gerados com semente fixa, para demonstrar o comportamento da ferramenta. Em produção, o pipeline seria:
+      <ul>
+        <li><strong>Captura — acostamento</strong> — visão computacional sobre as câmeras de detecção automática já previstas no pacote de investimento da Fernão Dias (implantação em até 24 meses). É a fonte principal para curvas e trechos de sinalização, onde a leitura precisa ser em escala métrica e o hardware já vai estar instalado por outro motivo.</li>
+        <li><strong>Captura — talude e contexto amplo</strong> — imagens gratuitas do Sentinel-2 (Copernicus/ESA), com revisita de ~5 dias, complementadas por voos de drone programados em trechos sem cobertura de câmera, pontes e viadutos.</li>
+        <li><strong>Processamento</strong> — conversão da leitura de câmera/índice espectral em métrica operacional por trecho: altura estimada de vegetação em acostamentos, percentual de cobertura vegetal em taludes.</li>
+        <li><strong>Detecção</strong> — comparação contínua contra limites operacionais de referência; cruzamentos de limite geram um score de risco e são classificados por causa (visibilidade, incêndio, drenagem, erosão). A baseline é recalibrada automaticamente após cada roçada registrada, para não gerar falso alerta logo depois de uma intervenção.</li>
+        <li><strong>Priorização</strong> — score de urgência combina a magnitude do desvio, a velocidade de crescimento/perda e a criticidade do local (curvas, sinalização, pontes), gerando o ranking de intervenção.</li>
+        <li><strong>Entrega</strong> — alertas no painel do CCO e no aplicativo das equipes de campo, com registro do resultado de cada roçada/intervenção para refinar o modelo ao longo do tempo.</li>
+      </ul>
+      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Por que segurança pesa tanto quanto economia</strong></p>
+      <p>Vegetação obstruindo sinalização é um risco já reconhecido judicialmente no setor rodoviário — em 2022 o DNIT foi condenado a indenizar em R$ 180 mil famílias de vítimas de um acidente na BR-267 em que a perícia apontou falta de sinalização e visibilidade adequadas entre os fatores contribuintes. Reduzir esse risco na faixa de domínio é, portanto, tanto uma questão de segurança viária quanto de exposição contratual e jurídica para a concessionária — não apenas economia operacional.</p>
+      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Riscos e mitigação</strong></p>
+      <ul>
+        <li><strong>Cobertura de nuvens</strong> no satélite pode atrasar uma leitura — mitigado pela revisita de ~5 dias e pela cobertura complementar de câmera nos trechos mais críticos.</li>
+        <li><strong>Falso alerta pós-roçada</strong> — corrigido pela recalibração automática de baseline a cada intervenção registrada.</li>
+        <li><strong>Integração com o CCO</strong> exige mapear o formato de alerta já em uso — mitigado começando com um piloto de escopo reduzido antes da integração completa.</li>
+        <li><strong>Custo de calibração inicial</strong> dos limites operacionais (altura, cobertura) por tipo de solo e cultivo de vegetação — mitigado validando com o time de conservação local no MVP, antes de escalar.</li>
+      </ul>
+      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Alinhamento com o que já importa para a Motiva</strong></p>
+      <p>A CCR RioSP foi reconhecida no Prêmio ANTT de Sustentabilidade Ambiental 2025. O Faixa Viva foi desenhado para ser um candidato natural a esse mesmo tipo de reconhecimento em futuras edições — não é uma ferramenta genérica de NDVI, é uma resposta a uma obrigação contratual que a concessionária já tem (zelar pela integridade da faixa de domínio) e a um ativo que ela já está construindo (as câmeras da Fernão Dias).</p>
+    </div>
+  </details>
+</div>
+
+<script>
+(function(){
+  function mulberry32(seed){
+    return function(){
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  let rand = mulberry32(20260810);
+  const RODOVIA_SEED = {fernaodias:20260810, autoban:20260811, parana:20260812};
+
+  const CAUSA = {
+    visibilidade:{label:'Vegetação obstruindo sinalização/visibilidade', action:'Roçada prioritária — trecho com placas de sinalização ou curva de raio reduzido.'},
+    incendio:{label:'Carga de vegetação seca — risco de incêndio', action:'Roçada prioritária no período de estiagem para reduzir o material combustível.'},
+    drenagem:{label:'Vegetação obstruindo dispositivo de drenagem', action:'Roçada e desobstrução de valeta/sarjeta antes do período chuvoso.'},
+    erosao:{label:'Cobertura vegetal insuficiente — risco de erosão no talude', action:'Avaliar revegetação/hidrossemeadura para estabilização do talude — referência real SICRO/DNIT: hidrossemeadura R$ 7,05/m² (Abr/2026, SP).'}
+  };
+
+  const TIPO_LABEL = {mato:'Acostamento', talude:'Talude'};
+  const FONTE_LABEL = {mato:'Câmera de detecção automática (visão computacional)', talude:'Imagem de satélite (Sentinel-2) / drone'};
+
+  const RODOVIAS = {
+    fernaodias: {
+      nome: 'Fernão Dias (BR-381)',
+      kmTotalReal: 569,
+      contexto: '<b>Piloto proposto para a BR-381 (Fernão Dias)</b> — 569 km assumidos pela Motiva em abril de 2026, com R$ 14,8 bi em investimentos previstos, incluindo câmeras de detecção automática em até 24 meses. O Faixa Viva foi desenhado para rodar sobre essa mesma infraestrutura nos acostamentos, sem custo adicional de hardware.',
+      mapHint: 'Simulação dos km 0–96 da Fernão Dias, sob concessão Motiva desde abril de 2026',
+      // [id, tipo, kmStart, kmEnd, startVal, endVal, causaKey]
+      raw: [
+        ['TR-01','mato',0,6,12,14,null],
+        ['TR-02','talude',6,14,78,80,null],
+        ['TR-03','mato',14,19,14,68,'visibilidade'],
+        ['TR-04','talude',19,27,72,48,'erosao'],
+        ['TR-05','mato',27,33,10,16,null],
+        ['TR-06','mato',33,40,16,58,'drenagem'],
+        ['TR-07','mato',40,48,18,36,'incendio'],
+        ['TR-08','talude',48,55,75,28,'erosao'],
+        ['TR-09','mato',55,63,11,15,null],
+        ['TR-10','mato',63,70,20,62,'incendio'],
+        ['TR-11','talude',70,78,80,74,null],
+        ['TR-12','mato',78,87,15,34,'visibilidade'],
+        ['TR-13','talude',87,96,70,73,null]
+      ],
+      history: [
+        ['18 mai 2026','TR-05','Vegetação obstruindo sinalização','Roçada mecânica','62 cm → 9 cm'],
+        ['03 jun 2026','TR-13','Cobertura vegetal baixa em talude','Hidrossemeadura de contenção','32% → 61%'],
+        ['21 jun 2026','TR-09','Vegetação em dispositivo de drenagem','Roçada e desobstrução de valeta','Fluxo de drenagem normalizado'],
+        ['09 jul 2026','TR-01','Carga de vegetação seca (pré-estiagem)','Roçada preventiva','55 cm → 7 cm'],
+        ['27 jul 2026','TR-02','Cobertura vegetal em recuperação','Monitoramento — sem intervenção','Estável em 74%']
+      ]
+    },
+    autoban: {
+      nome: 'Autoban (SP-330/SP-348)',
+      kmTotalReal: 316.8,
+      contexto: '<b>Simulação para a Autoban (SP-330/SP-348)</b> — 316,8 km entre São Paulo e Cordeirópolis pela Via Anhanguera e Rodovia dos Bandeirantes, um dos corredores mais movimentados do país. Nesta malha mais urbanizada, o Faixa Viva se apoiaria nas câmeras de tráfego e detecção de incidentes já instaladas na via, complementadas por satélite nos taludes.',
+      mapHint: 'Simulação de 84 km da Autoban, corredor de alta densidade de tráfego e interseções',
+      raw: [
+        ['AB-01','mato',0,7,12,15,null],
+        ['AB-02','mato',7,14,15,52,'visibilidade'],
+        ['AB-03','talude',14,20,74,70,null],
+        ['AB-04','mato',20,28,16,33,'incendio'],
+        ['AB-05','mato',28,34,11,14,null],
+        ['AB-06','talude',34,41,70,46,'erosao'],
+        ['AB-07','mato',41,49,18,60,'incendio'],
+        ['AB-08','mato',49,55,13,16,null],
+        ['AB-09','talude',55,61,78,75,null],
+        ['AB-10','mato',61,70,17,37,'visibilidade'],
+        ['AB-11','mato',70,84,20,66,'drenagem']
+      ],
+      history: [
+        ['22 abr 2026','AB-08','Vegetação obstruindo sinalização em trevo','Roçada mecânica','58 cm → 8 cm'],
+        ['10 mai 2026','AB-03','Cobertura vegetal baixa em talude marginal','Hidrossemeadura de contenção','41% → 72%'],
+        ['30 mai 2026','AB-01','Carga de vegetação seca próxima a interseção','Roçada preventiva','49 cm → 6 cm'],
+        ['15 jun 2026','AB-09','Cobertura vegetal em recuperação','Monitoramento — sem intervenção','Estável em 76%'],
+        ['02 jul 2026','AB-05','Vegetação em dispositivo de drenagem','Roçada e desobstrução de valeta','Fluxo de drenagem normalizado']
+      ]
+    },
+    parana: {
+      nome: 'Motiva Paraná (BR-369/373/376)',
+      kmTotalReal: 569,
+      contexto: '<b>Simulação para a Motiva Paraná (BR-369/373/376)</b> — 569 km até o Porto de Paranaguá, atravessando a Serra do Mar. Aqui o perfil de risco muda: a prioridade passa a ser cobertura vegetal em taludes íngremes, historicamente sujeitos a deslizamento em época de chuva.',
+      mapHint: 'Simulação de 90 km da Motiva Paraná, incluindo a descida da Serra do Mar até Paranaguá',
+      raw: [
+        ['PR-01','mato',0,9,14,17,null],
+        ['PR-02','talude',9,16,75,68,null],
+        ['PR-03','talude',16,23,72,26,'erosao'],
+        ['PR-04','talude',23,29,68,31,'erosao'],
+        ['PR-05','talude',29,34,70,47,'erosao'],
+        ['PR-06','mato',34,42,15,35,'visibilidade'],
+        ['PR-07','mato',42,49,12,15,null],
+        ['PR-08','talude',49,56,74,72,null],
+        ['PR-09','mato',56,64,18,59,'incendio'],
+        ['PR-10','talude',64,71,73,44,'erosao'],
+        ['PR-11','mato',71,80,11,14,null],
+        ['PR-12','mato',80,90,16,33,'drenagem']
+      ],
+      history: [
+        ['05 mai 2026','PR-08','Cobertura vegetal baixa em talude na Serra do Mar','Hidrossemeadura emergencial de contenção','35% → 70%'],
+        ['19 mai 2026','PR-01','Vegetação obstruindo sinalização em curva','Roçada mecânica','54 cm → 7 cm'],
+        ['08 jun 2026','PR-11','Carga de vegetação seca (pré-estiagem)','Roçada preventiva','47 cm → 9 cm'],
+        ['24 jun 2026','PR-02','Cobertura vegetal em recuperação pós-chuva','Monitoramento — sem intervenção','Estável em 71%'],
+        ['11 jul 2026','PR-07','Vegetação em dispositivo de drenagem próximo ao porto','Roçada e desobstrução de valeta','Fluxo de drenagem normalizado']
+      ]
+    }
+  };
+
+  function genSeries(tipo, start, end){
+    const pts = [];
+    const phase = rand()*Math.PI;
+    for(let day=0; day<=90; day+=5){
+      const t = day/90;
+      let v;
+      if(tipo==='mato'){ v = start + (end-start)*Math.pow(t,0.85); v += Math.sin(t*Math.PI*2+phase)*1.2; v += (rand()-0.5)*2.2; v = Math.max(2,v); }
+      else { v = start + (end-start)*t; v += Math.sin(t*Math.PI*2+phase)*1.5; v += (rand()-0.5)*2.5; v = Math.max(5, Math.min(95,v)); }
+      pts.push({day, val: Math.round(v*10)/10});
+    }
+    return pts;
+  }
+  function findCrossDay(series, tipo){
+    for(const pt of series){
+      if(tipo==='mato' && pt.val>=40) return pt.day;
+      if(tipo==='talude' && pt.val<=50) return pt.day;
+    }
+    return null;
+  }
+
+  function computeSegments(raw){
+    return raw.map(([id,tipo,kmStart,kmEnd,start,end,causaKey])=>{
+      const series = genSeries(tipo,start,end);
+      const baselineAvg = (series[0].val+series[1].val+series[2].val)/3;
+      const current = series[series.length-1].val;
+      let score;
+      if(tipo==='mato') score = Math.max(0,Math.min(100, Math.round((current-12)/(70-12)*100)));
+      else score = Math.max(0,Math.min(100, Math.round((70-current)/(70-20)*100)));
+      let status = score>=55 ? 'critico' : score>=25 ? 'atencao' : 'estavel';
+      const causaInfo = (status==='critico'||status==='atencao') ? CAUSA[causaKey] : null;
+      const anomalyDay = (status==='critico'||status==='atencao') ? findCrossDay(series,tipo) : null;
+      return {id, tipo, kmStart, kmEnd, km: kmEnd-kmStart, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay};
+    });
+  }
+
+  const STATUS_LABEL = {critico:'Crítico', atencao:'Atenção', estavel:'Estável'};
+  const STATUS_ORDER = {critico:0, atencao:1, estavel:2};
+  function toneVar(status){ return {critico:'var(--critical)', atencao:'var(--warning)', estavel:'var(--healthy)'}[status]; }
+  function unit(tipo){ return tipo==='mato' ? 'cm' : '%'; }
+  function metricLabel(tipo){ return tipo==='mato' ? 'Altura estimada' : 'Cobertura vegetal'; }
+  function threshold(tipo){ return tipo==='mato' ? 40 : 50; }
+
+  let currentKey = 'fernaodias';
+  let segments = [];
+  let selectedId = null;
+  let activeFilter = 'todos';
+  const emittedOS = {}; // "rodoviaKey|segId" -> {numero, prazo, ts}
+
+  /* ---------------- KPIs ---------------- */
+  function renderKPIs(){
+    const totalKm = segments.reduce((s,p)=>s+p.km,0);
+    const alertSegs = segments.filter(p=>p.status==='critico'||p.status==='atencao');
+    const alertKm = alertSegs.reduce((s,p)=>s+p.km,0);
+    const fireSegs = segments.filter(p=>p.causaKey==='incendio' && (p.status==='critico'||p.status==='atencao'));
+    const el = document.getElementById('kpis');
+    el.innerHTML = [
+      kpi('Extensão monitorada', totalKm+' km', segments.length+' trechos · revisão a cada 5 dias'),
+      kpi('Trechos em alerta', alertSegs.length+' de '+segments.length, Math.round(alertKm/totalKm*100)+'% da extensão monitorada'),
+      kpi('Roçadas evitadas', '~58%', 'vs. cronograma fixo mensal, trecho simulado'),
+      kpi('Risco de incêndio', fireSegs.length+' trechos', 'priorizados no período de estiagem (jun–out)'),
+      kpi('Economia estimada', '~'+fmtMoney(totalKm*ROI_SAVINGS_PER_KM), 'trecho simulado de '+totalKm+' km · veja o simulador abaixo')
+    ].join('');
+  }
+  function kpi(label,value,sub){
+    return '<div class="kpi"><div class="kpi-label">'+label+'</div><div class="kpi-value mono">'+value+'</div><div class="kpi-sub">'+sub+'</div></div>';
+  }
+
+  function renderSeasonBanner(){
+    const fireSegs = segments.filter(p=>p.causaKey==='incendio' && (p.status==='critico'||p.status==='atencao'));
+    document.getElementById('seasonBanner').innerHTML =
+      '<b>Período de estiagem (jun–out)</b> — risco de incêndio elevado na faixa de domínio. '+
+      fireSegs.length+' trechos priorizados automaticamente por carga de vegetação seca ('+fireSegs.map(p=>p.id).join(', ')+').';
+  }
+
+  function renderContextBanner(){
+    document.getElementById('contextBanner').innerHTML = RODOVIAS[currentKey].contexto;
+  }
+
+  function renderMapMeta(){
+    const totalKm = segments.reduce((s,p)=>s+p.km,0);
+    document.getElementById('mapHeading').textContent = 'Mapa da rodovia — '+RODOVIAS[currentKey].nome;
+    document.getElementById('mapHint').textContent = RODOVIAS[currentKey].mapHint+' · cada segmento representa um trecho, largura proporcional à extensão · clique para ver o histórico';
+    const ruler = document.getElementById('routeRuler');
+    const steps = 4;
+    ruler.innerHTML = Array.from({length:steps+1}, (_,i)=>'<span>km '+Math.round(totalKm*i/steps)+'</span>').join('');
+  }
+
+  /* ---------------- rodovia switch ---------------- */
+  function renderRodoviaSwitch(){
+    document.getElementById('rodoviaSwitch').innerHTML = Object.keys(RODOVIAS).map(key=>
+      '<button type="button" class="rodovia-btn'+(key===currentKey?' active':'')+'" data-key="'+key+'">'+RODOVIAS[key].nome+'</button>'
+    ).join('');
+    document.querySelectorAll('.rodovia-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ loadRodovia(btn.dataset.key); });
+    });
+  }
+  function loadRodovia(key){
+    currentKey = key;
+    rand = mulberry32(RODOVIA_SEED[key]);
+    segments = computeSegments(RODOVIAS[key].raw);
+    selectedId = segments.slice().sort((a,b)=>b.score-a.score)[0].id;
+    activeFilter = 'todos';
+    renderRodoviaSwitch(); renderKPIs(); renderContextBanner(); renderSeasonBanner(); renderMapMeta();
+    renderLegend(); renderRouteStrip(); renderDetail(); renderFilters(); renderPriorityList(); renderAlerts(); renderHistory();
+    updateRoiForCurrentRodovia();
+  }
+
+  /* ---------------- legend ---------------- */
+  function renderLegend(){
+    const items = [['critico','Crítico'],['atencao','Atenção'],['estavel','Estável']];
+    document.getElementById('legend').innerHTML = items.map(([k,l])=>
+      '<div class="legend-item"><span class="swatch" style="background:'+toneVar(k)+'"></span>'+l+'</div>'
+    ).join('');
+  }
+
+  /* ---------------- route strip ---------------- */
+  function renderRouteStrip(){
+    const el = document.getElementById('routeStrip');
+    el.innerHTML = segments.map(p=>{
+      const w = Math.max(64, p.km*9);
+      return '<button class="route-seg tone-'+p.status+(p.id===selectedId?' selected':'')+'" style="width:'+w+'px;" data-id="'+p.id+'" aria-pressed="'+(p.id===selectedId)+'">'+
+        '<span class="seg-id">'+p.id+'</span>'+
+        '<span class="seg-km">km '+p.kmStart+'–'+p.kmEnd+'</span>'+
+        '<span class="seg-type">'+TIPO_LABEL[p.tipo]+'</span>'+
+        '<span class="seg-value mono">'+Math.round(p.current)+unit(p.tipo)+'</span>'+
+      '</button>';
+    }).join('');
+    el.querySelectorAll('.route-seg').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ selectedId = btn.dataset.id; renderRouteStrip(); renderDetail(); });
+    });
+  }
+
+  /* ---------------- chart ---------------- */
+  function niceMinMax(values, tipo){
+    let min=Math.min.apply(null,values), max=Math.max.apply(null,values);
+    min = Math.floor(Math.min(min, threshold(tipo)-8)/5)*5;
+    max = Math.ceil(Math.max(max, threshold(tipo)+8)/5)*5;
+    min = Math.max(0,min);
+    if(tipo==='talude') max = Math.min(100,max);
+    return [min,max];
+  }
+  function buildChart(seg){
+    const w=520,h=170,padL=32,padR=14,padT=14,padB=24;
+    const vals = seg.series.map(p=>p.val);
+    const [vmin,vmax] = niceMinMax(vals, seg.tipo);
+    const x = d => padL + (d/90)*(w-padL-padR);
+    const y = v => (h-padB) - ((v-vmin)/(vmax-vmin))*(h-padT-padB);
+    const linePts = seg.series.map(p=>x(p.day).toFixed(1)+','+y(p.val).toFixed(1)).join(' ');
+    const areaPts = x(0).toFixed(1)+','+(h-padB)+' '+linePts+' '+x(90).toFixed(1)+','+(h-padB);
+    const stroke = toneVar(seg.status);
+
+    const step = (vmax-vmin)>60 ? 20 : 10;
+    let refs = [];
+    for(let v=vmin; v<=vmax; v+=step){ if(v>vmin && v<vmax) refs.push(v); }
+    let gridSvg = refs.map(v=>
+      '<line x1="'+padL+'" x2="'+(w-padR)+'" y1="'+y(v).toFixed(1)+'" y2="'+y(v).toFixed(1)+'" stroke="var(--border)" stroke-width="1"></line>'+
+      '<text x="4" y="'+(y(v)+3).toFixed(1)+'" font-size="9.5" fill="var(--ink-faint)" font-family="var(--font-mono)">'+v+'</text>'
+    ).join('');
+
+    const th = threshold(seg.tipo);
+    const thSvg = '<line x1="'+padL+'" x2="'+(w-padR)+'" y1="'+y(th).toFixed(1)+'" y2="'+y(th).toFixed(1)+'" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="2,3"></line>'+
+      '<text x="'+(w-padR)+'" y="'+(y(th)-4).toFixed(1)+'" font-size="9.5" fill="var(--ink-faint)" font-family="var(--font-mono)" text-anchor="end">ref. '+th+unit(seg.tipo)+'</text>';
+
+    let anomSvg = '';
+    if(seg.anomalyDay!=null){
+      const ax = x(seg.anomalyDay);
+      const pt = seg.series.reduce((a,b)=>Math.abs(b.day-seg.anomalyDay)<Math.abs(a.day-seg.anomalyDay)?b:a);
+      anomSvg = '<line x1="'+ax.toFixed(1)+'" x2="'+ax.toFixed(1)+'" y1="'+padT+'" y2="'+(h-padB)+'" stroke="'+stroke+'" stroke-width="1" stroke-dasharray="3,3" opacity="0.55"></line>'+
+        '<circle cx="'+ax.toFixed(1)+'" cy="'+y(pt.val).toFixed(1)+'" r="3.5" fill="'+stroke+'"></circle>';
+    }
+    const last = seg.series[seg.series.length-1];
+    const lastSvg = '<circle cx="'+x(last.day).toFixed(1)+'" cy="'+y(last.val).toFixed(1)+'" r="4" fill="var(--surface)" stroke="'+stroke+'" stroke-width="2.5"></circle>';
+
+    const axisSvg = [0,45,90].map(d=>
+      '<text x="'+x(d).toFixed(1)+'" y="'+(h-6)+'" font-size="9.5" fill="var(--ink-faint)" font-family="var(--font-mono)" text-anchor="middle">dia '+d+'</text>'
+    ).join('');
+
+    return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Série temporal do trecho '+seg.id+'">'+
+      gridSvg+thSvg+
+      '<polygon points="'+areaPts+'" fill="var(--accent-soft)" opacity="0.55"></polygon>'+
+      '<polyline points="'+linePts+'" fill="none" stroke="'+stroke+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"></polyline>'+
+      anomSvg+lastSvg+axisSvg+
+    '</svg>';
+  }
+
+  /* ---------------- detail panel ---------------- */
+  function renderDetail(){
+    const p = segments.find(s=>s.id===selectedId);
+    const el = document.getElementById('detailPanel');
+    const badgeStyle = 'background:'+(p.status==='critico'?'var(--critical-soft)':p.status==='atencao'?'var(--warning-soft)':'var(--healthy-soft)')+';color:'+toneVar(p.status)+';';
+    let causeLine, actionText;
+    if(p.causaInfo){
+      let suffix = '.';
+      if(p.anomalyDay!=null){
+        const d = 90-p.anomalyDay;
+        const quando = d<=0 ? 'na leitura mais recente' : 'há '+d+' dias';
+        suffix = p.status==='critico'
+          ? ' — limite de referência ultrapassado '+quando+', em faixa de risco elevado.'
+          : ' — limite de referência ultrapassado '+quando+'; ainda em fase de observação, sem risco imediato.';
+      }
+      causeLine = p.causaInfo.label + suffix;
+      actionText = p.causaInfo.action;
+    } else {
+      causeLine = p.tipo==='mato' ? 'Altura dentro do limite operacional — sem necessidade de roçada.' : 'Cobertura vegetal adequada para contenção do talude.';
+      actionText = 'Manter monitoramento de rotina — nenhuma intervenção necessária.';
+    }
+    const delta = p.current - p.baselineAvg;
+    const deltaText = p.tipo==='mato' ? (delta>=0?'+':'')+Math.round(delta)+' cm' : (delta>=0?'+':'')+Math.round(delta)+' p.p.';
+    const deltaColor = p.status!=='estavel' ? toneVar(p.status) : 'var(--ink)';
+    el.innerHTML =
+      '<div class="detail-title-row">'+
+        '<div><h2>'+p.id+' · '+TIPO_LABEL[p.tipo]+'</h2><div class="detail-crop">km '+p.kmStart+'–'+p.kmEnd+' · '+p.km+' km</div></div>'+
+        '<span class="badge" style="'+badgeStyle+'">'+STATUS_LABEL[p.status]+'</span>'+
+      '</div>'+
+      '<div class="detail-stats">'+
+        '<div><div class="stat-label">'+metricLabel(p.tipo)+'</div><div class="stat-value">'+Math.round(p.current)+unit(p.tipo)+'</div></div>'+
+        '<div><div class="stat-label">Variação no período</div><div class="stat-value" style="color:'+deltaColor+'">'+deltaText+'</div></div>'+
+      '</div>'+
+      '<div class="chart-wrap">'+buildChart(p)+'</div>'+
+      '<div class="detail-note">'+causeLine+'</div>'+
+      '<div class="action-box"><b>Ação recomendada</b>'+actionText+'</div>'+
+      renderOSBlock(p)+
+      '<div class="fonte-tag"><span class="fonte-dot"></span>Fonte de dado: '+FONTE_LABEL[p.tipo]+'</div>';
+
+    const btn = document.getElementById('osBtn');
+    if(btn){ btn.addEventListener('click', ()=>{ issueOS(p); renderDetail(); }); }
+  }
+
+  /* ---------------- ordem de serviço ---------------- */
+  function osKey(p){ return currentKey+'|'+p.id; }
+  function issueOS(p){
+    const numero = 'OS-'+String(Math.floor(rand()*90000+10000));
+    const prazo = p.status==='critico' ? '5 dias' : '15 dias';
+    emittedOS[osKey(p)] = {numero, prazo};
+  }
+  function renderOSBlock(p){
+    if(!p.causaInfo) return '';
+    const existing = emittedOS[osKey(p)];
+    if(existing){
+      return '<div class="os-confirm"><b>'+existing.numero+' emitida</b>'+
+        'Enviada ao aplicativo de campo e registrada no CCO · km '+p.kmStart+'–'+p.kmEnd+' · prazo sugerido: '+existing.prazo+'.</div>';
+    }
+    return '<button type="button" class="os-btn" id="osBtn">Emitir ordem de serviço</button>';
+  }
+
+  /* ---------------- priority list ---------------- */
+  function renderFilters(){
+    const opts = [['todos','Todos'],['critico','Crítico'],['atencao','Atenção'],['estavel','Estável']];
+    document.getElementById('filters').innerHTML = opts.map(([k,l])=>
+      '<button class="chip'+(activeFilter===k?' active':'')+'" data-filter="'+k+'">'+l+'</button>'
+    ).join('');
+    document.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ activeFilter = btn.dataset.filter; renderFilters(); renderPriorityList(); });
+    });
+  }
+  function renderPriorityList(){
+    const el = document.getElementById('priorityList');
+    const list = segments.slice()
+      .filter(p=> activeFilter==='todos' || p.status===activeFilter)
+      .sort((a,b)=> STATUS_ORDER[a.status]-STATUS_ORDER[b.status] || b.score-a.score);
+    if(list.length===0){
+      el.innerHTML = '<div class="panel-hint" style="padding:16px 4px;">Nenhum trecho nesta categoria.</div>';
+      return;
+    }
+    el.innerHTML = list.map(p=>{
+      const cause = p.causaInfo ? p.causaInfo.label : (p.tipo==='mato' ? 'Altura controlada' : 'Cobertura adequada');
+      return '<button class="p-row" data-id="'+p.id+'">'+
+        '<span class="p-stripe" style="background:'+toneVar(p.status)+'"></span>'+
+        '<span class="p-main"><span class="p-id">'+p.id+'</span><span class="p-crop">'+TIPO_LABEL[p.tipo]+' · km '+p.kmStart+'–'+p.kmEnd+'</span></span>'+
+        '<span class="p-cause">'+cause+'</span>'+
+        '<span class="p-score">'+p.score+'</span>'+
+        '<span class="badge p-badge" style="background:transparent;color:'+toneVar(p.status)+';border:1px solid '+toneVar(p.status)+';">'+STATUS_LABEL[p.status]+'</span>'+
+      '</button>';
+    }).join('');
+    el.querySelectorAll('.p-row').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ selectedId = btn.dataset.id; renderRouteStrip(); renderDetail(); });
+    });
+  }
+
+  /* ---------------- alerts ---------------- */
+  function renderAlerts(){
+    const el = document.getElementById('alertList');
+    const alerts = segments.filter(p=>p.status==='critico'||p.status==='atencao').sort((a,b)=>b.score-a.score);
+    if(alerts.length===0){ el.innerHTML = '<div class="panel-hint">Nenhum alerta ativo.</div>'; return; }
+    el.innerHTML = alerts.map(p=>{
+      const crossed = p.anomalyDay!=null;
+      const grave = p.status==='critico';
+      let metricText;
+      if(p.tipo==='mato'){
+        metricText = !crossed
+          ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — em ritmo de crescimento que deve ultrapassar o limite de '+threshold('mato')+' cm nas próximas semanas.'
+          : grave
+            ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — bem acima do limite de referência de '+threshold('mato')+' cm.'
+            : 'vegetação com ~'+Math.round(p.current)+' cm de altura — pouco acima do limite de referência de '+threshold('mato')+' cm; sob observação.';
+      } else {
+        metricText = !crossed
+          ? 'cobertura vegetal em ~'+Math.round(p.current)+'% — em queda, aproximando-se do mínimo de referência de '+threshold('talude')+'%.'
+          : grave
+            ? 'cobertura vegetal em ~'+Math.round(p.current)+'% — bem abaixo do mínimo de referência de '+threshold('talude')+'% para contenção do talude.'
+            : 'cobertura vegetal em ~'+Math.round(p.current)+'% — pouco abaixo do mínimo de referência de '+threshold('talude')+'%; sob observação.';
+      }
+      const daysSince = 90-p.anomalyDay;
+      const metaTime = !crossed ? 'tendência identificada nos últimos 90 dias' : (daysSince<=0 ? 'limite ultrapassado na leitura mais recente' : 'limite ultrapassado há '+daysSince+' dias');
+      return '<div class="alert-item">'+
+        '<span class="alert-dot" style="background:'+toneVar(p.status)+'"></span>'+
+        '<div><div class="alert-text"><b>'+p.id+'</b> (km '+p.kmStart+'–'+p.kmEnd+') — '+metricText+' '+p.causaInfo.label+'.</div>'+
+        '<div class="alert-meta">'+metaTime+' · '+TIPO_LABEL[p.tipo]+' · '+p.km+' km</div></div>'+
+      '</div>';
+    }).join('');
+  }
+
+  /* ---------------- history ---------------- */
+  function renderHistory(){
+    const rows = RODOVIAS[currentKey].history;
+    document.getElementById('historyBody').innerHTML = rows.map(r=>
+      '<tr><td class="mono">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td class="result-up mono">'+r[4]+'</td></tr>'
+    ).join('');
+  }
+
+  /* ---------------- ROI calculator ---------------- */
+  const ROI_SAVINGS_PER_KM = 10800-4500; // diferença anual de custo de roçada fixa vs. orientada por dados, por km
+  let roiPresets = [];
+  let roiSliderTouched = false;
+
+  function fmtMoney(v){
+    if(v>=1000000) return 'R$ '+(v/1000000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' milhões/ano';
+    return 'R$ '+Math.round(v/1000)+' mil/ano';
+  }
+  function renderRoiPresets(activeKm){
+    document.getElementById('roiPresets').innerHTML = roiPresets.map(p=>
+      '<button type="button" class="roi-preset'+(p.km===activeKm?' active':'')+'" data-km="'+p.km+'">'+p.label+'</button>'
+    ).join('');
+    document.querySelectorAll('.roi-preset').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ roiSliderTouched=false; updateRoi(Number(btn.dataset.km)); });
+    });
+  }
+  function updateRoi(km){
+    document.getElementById('roiSlider').value = km;
+    document.getElementById('roiKmValue').textContent = km+' km';
+    document.getElementById('roiSavings').textContent = fmtMoney(km*ROI_SAVINGS_PER_KM);
+    renderRoiPresets(roiPresets.some(p=>p.km===km) ? km : -1);
+  }
+  function updateRoiForCurrentRodovia(){
+    const pilotKm = segments.reduce((s,p)=>s+p.km,0);
+    const rodovia = RODOVIAS[currentKey];
+    roiPresets = [
+      {km:pilotKm, label:'Trecho simulado · '+pilotKm+' km'},
+      {km:Math.round(rodovia.kmTotalReal), label:rodovia.nome.split(' (')[0]+' completa · '+String(rodovia.kmTotalReal).replace('.',',')+' km'},
+      {km:3000, label:'Malha Motiva · ~3.000 km'}
+    ];
+    document.getElementById('roiSlider').max = Math.max(3000, Math.round(rodovia.kmTotalReal));
+    if(!roiSliderTouched) updateRoi(pilotKm);
+    else renderRoiPresets(Number(document.getElementById('roiSlider').value));
+  }
+  function initRoi(){
+    const slider = document.getElementById('roiSlider');
+    slider.addEventListener('input', ()=>{ roiSliderTouched=true; updateRoi(Number(slider.value)); });
+  }
+
+  initRoi();
+  loadRodovia('fernaodias');
+})();
+</script>
