@@ -1,0 +1,270 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faixa Viva — Sentinel Status</title>
+<style>
+  :root{
+    --bg:#ECEEE5; --surface:#FFFFFF; --surface-2:#F5F6EF; --ink:#181A15; --ink-muted:#565948; --ink-faint:#888C74;
+    --border:#D8DACB; --accent:#2C6B4A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF;
+    --healthy:#3F8C57; --warning:#B87A1F; --critical:#AE3A2E;
+    --healthy-soft:#DEEEDF; --warning-soft:#F3E5C8; --critical-soft:#F4DBD7;
+    --radar:#5B7FA6; --radar-soft:#DFE7EF;
+    --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:"SF Mono","Cascadia Code","Roboto Mono",ui-monospace,Menlo,monospace;
+    --radius:3px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#101410; --surface:#191C16; --surface-2:#1D2018; --ink:#E9ECDF; --ink-muted:#A3A78F; --ink-faint:#6E7260;
+      --border:#2E331F; --accent:#5FBE7C; --accent-ink:#0C170E; --accent-soft:#20321F;
+      --healthy:#5FBE7C; --warning:#E2A94D; --critical:#E2695A;
+      --healthy-soft:#1D2E1C; --warning-soft:#332918; --critical-soft:#332019;
+      --radar:#7FA6D6; --radar-soft:#1C2733;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#101410; --surface:#191C16; --surface-2:#1D2018; --ink:#E9ECDF; --ink-muted:#A3A78F; --ink-faint:#6E7260;
+    --border:#2E331F; --accent:#5FBE7C; --accent-ink:#0C170E; --accent-soft:#20321F;
+    --healthy:#5FBE7C; --warning:#E2A94D; --critical:#E2695A;
+    --healthy-soft:#1D2E1C; --warning-soft:#332918; --critical-soft:#332019;
+    --radar:#7FA6D6; --radar-soft:#1C2733;
+  }
+  :root[data-theme="light"]{
+    --bg:#ECEEE5; --surface:#FFFFFF; --surface-2:#F5F6EF; --ink:#181A15; --ink-muted:#565948; --ink-faint:#888C74;
+    --border:#D8DACB; --accent:#2C6B4A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF;
+    --healthy:#3F8C57; --warning:#B87A1F; --critical:#AE3A2E;
+    --healthy-soft:#DEEEDF; --warning-soft:#F3E5C8; --critical-soft:#F4DBD7;
+    --radar:#5B7FA6; --radar-soft:#DFE7EF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .app{font-family:var(--font-body); color:var(--ink); background:var(--bg); min-height:100%; padding:24px clamp(14px,3vw,40px) 60px;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  .topbar{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:14px; padding-bottom:16px; margin-bottom:20px; border-bottom:1px solid var(--border);}
+  .back-link{font-size:12px; color:var(--ink-muted); text-decoration:none; display:inline-flex; align-items:center; gap:5px;}
+  .back-link:hover{color:var(--accent);}
+  .title-block h1{font-family:var(--font-mono); font-size:19px; font-weight:700; letter-spacing:-0.01em; margin:8px 0 4px;}
+  .title-block .sub{font-size:12.5px; color:var(--ink-muted);}
+  .status-pill{display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 11px;}
+  .status-pill .dot{width:6px; height:6px; border-radius:50%; background:var(--accent);}
+
+  .stat-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px;}
+  @media (max-width:820px){ .stat-strip{grid-template-columns:1fr 1fr;} }
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px;}
+  .stat-label{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-faint);}
+  .stat-value{font-family:var(--font-mono); font-size:22px; font-weight:700; margin-top:4px;}
+  .stat-sub{font-size:11px; color:var(--ink-muted); margin-top:2px; line-height:1.4;}
+
+  .panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 18px 20px; margin-bottom:20px;}
+  .panel-head{font-family:var(--font-mono); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-muted); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);}
+
+  .sat-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;}
+  @media (max-width:720px){ .sat-grid{grid-template-columns:1fr;} }
+  .sat-card{border:1px solid var(--border); border-radius:var(--radius); padding:16px;}
+  .sat-card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .sat-card-name{font-family:var(--font-mono); font-size:14px; font-weight:700;}
+  .sat-tag{font-family:var(--font-mono); font-size:10px; padding:2px 8px; border-radius:999px; font-weight:700;}
+  .sat-tag.optical{background:var(--healthy-soft); color:var(--healthy);}
+  .sat-tag.radar{background:var(--radar-soft); color:var(--radar);}
+  .sat-specs{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; font-size:12px;}
+  .sat-specs dt{color:var(--ink-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:0.03em;}
+  .sat-specs dd{margin:2px 0 0; font-family:var(--font-mono); color:var(--ink); font-size:12.5px;}
+  .sat-note{font-size:11.5px; color:var(--ink-muted); line-height:1.5; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);}
+
+  .matrix-wrap{overflow-x:auto;}
+  table.matrix{border-collapse:collapse; width:100%; min-width:760px; font-size:12px;}
+  table.matrix th{text-align:left; font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-faint); padding:0 8px 10px 0; border-bottom:1px solid var(--border); font-weight:600;}
+  table.matrix td{padding:10px 8px 10px 0; border-bottom:1px solid var(--border); vertical-align:middle;}
+  .seg-cell b{font-family:var(--font-mono); font-size:12.5px;}
+  .seg-cell .seg-coord{display:block; font-size:10.5px; color:var(--ink-faint); font-family:var(--font-mono); margin-top:1px;}
+  .win-cell{text-align:center;}
+  .win-tag{display:inline-flex; align-items:center; justify-content:center; width:52px; height:22px; border-radius:3px; font-family:var(--font-mono); font-size:9.5px; font-weight:700;}
+  .win-tag.optical{background:var(--healthy-soft); color:var(--healthy);}
+  .win-tag.radar{background:var(--radar-soft); color:var(--radar); border:1px dashed var(--radar);}
+  .cov-cell{font-family:var(--font-mono); font-weight:700; color:var(--accent);}
+  .matrix-legend{display:flex; gap:16px; margin-top:12px; font-size:11px; color:var(--ink-muted);}
+  .matrix-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .matrix-legend .win-tag{width:32px; height:16px; font-size:8px;}
+
+  .single-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:720px){ .single-grid{grid-template-columns:1fr;} }
+  .single-card{border:1px solid var(--border); border-radius:var(--radius); padding:14px;}
+  .single-card .rodovia{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color:var(--accent); font-weight:700;}
+  .single-card .loc{font-size:13px; font-weight:600; margin:3px 0 8px;}
+  .single-card .row{display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-top:1px solid var(--border);}
+  .single-card .row:first-of-type{border-top:none;}
+  .single-card .row dt{color:var(--ink-faint);}
+  .single-card .row dd{margin:0; font-family:var(--font-mono); color:var(--ink);}
+
+  .footnote{font-size:11.5px; color:var(--ink-faint); line-height:1.6;}
+  .footnote a{color:var(--accent);}
+  .sources{margin-top:10px; padding-left:16px;}
+  .sources li{margin-bottom:4px;}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="title-block">
+      <a class="back-link" href="index.html">&larr; Voltar ao dashboard</a>
+      <h1>FAIXA VIVA · SENTINEL STATUS</h1>
+      <div class="sub">Cobertura de monitoramento por satélite — dados reais, verificados via Copernicus Data Space Ecosystem</div>
+    </div>
+    <span class="status-pill"><span class="dot"></span>8 pontos reais monitorados</span>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat">
+      <div class="stat-label">Cobertura combinada (90d)</div>
+      <div class="stat-value mono">100%</div>
+      <div class="stat-sub">30 de 30 janelas · NDVI + radar</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cobertura só óptica</div>
+      <div class="stat-value mono">67%</div>
+      <div class="stat-sub">20 de 30 janelas · Sentinel-2 isolado</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Janelas preenchidas por radar</div>
+      <div class="stat-value mono">10</div>
+      <div class="stat-sub">dias em que a nuvem bloqueou o óptico</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Séries completas (90d)</div>
+      <div class="stat-value mono">5</div>
+      <div class="stat-sub">+ 3 leituras pontuais (Autoban, Paraná)</div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">Sensores</div>
+    <div class="sat-grid">
+      <div class="sat-card">
+        <div class="sat-card-head"><span class="sat-card-name">Sentinel-2 L2A</span><span class="sat-tag optical">ÓPTICO</span></div>
+        <dl class="sat-specs">
+          <div><dt>Agência</dt><dd>ESA / Copernicus</dd></div>
+          <div><dt>Sensor</dt><dd>Multiespectral (MSI)</dd></div>
+          <div><dt>Resolução</dt><dd>10 m/px (B04, B08)</dd></div>
+          <div><dt>Revisita</dt><dd>~5 dias</dd></div>
+        </dl>
+        <div class="sat-note">Fonte do NDVI usado nos 5 taludes reais da Fernão Dias. Bloqueado por nuvem em 10 das 30 janelas verificadas no período — ponto fraco que o radar cobre.</div>
+      </div>
+      <div class="sat-card">
+        <div class="sat-card-head"><span class="sat-card-name">Sentinel-1 GRD</span><span class="sat-tag radar">RADAR (SAR)</span></div>
+        <dl class="sat-specs">
+          <div><dt>Agência</dt><dd>ESA / Copernicus</dd></div>
+          <div><dt>Sensor</dt><dd>Radar de abertura sintética, banda C</dd></div>
+          <div><dt>Modo</dt><dd>IW, polarização VV</dd></div>
+          <div><dt>Revisita</dt><dd>~6–12 dias</dd></div>
+        </dl>
+        <div class="sat-note">Atravessa nuvem e opera de dia ou de noite. Mede refletividade de superfície, não é um índice de vegetação — usado aqui como confirmação de cobertura, não substitui o NDVI.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">Matriz de cobertura — Fernão Dias, 5 trechos de talude, últimos 90 dias</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Trecho</th>
+            <th>01 mai</th><th>16 mai</th><th>31 mai</th><th>15 jun</th><th>30 jun</th><th>15 jul</th>
+            <th>Cobertura</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody">
+          <tr>
+            <td class="seg-cell"><b>TR-02</b><span class="seg-coord">-23.36555, -46.56936</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="cov-cell">6/6</td>
+          </tr>
+          <tr>
+            <td class="seg-cell"><b>TR-04</b><span class="seg-coord">-23.25751, -46.59098</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="cov-cell">6/6</td>
+          </tr>
+          <tr>
+            <td class="seg-cell"><b>TR-08</b><span class="seg-coord">-23.03331, -46.54615</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="cov-cell">6/6</td>
+          </tr>
+          <tr>
+            <td class="seg-cell"><b>TR-11</b><span class="seg-coord">-22.90273, -46.42383</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="cov-cell">6/6</td>
+          </tr>
+          <tr>
+            <td class="seg-cell"><b>TR-13</b><span class="seg-coord">-22.84025, -46.32055</span></td>
+            <td class="win-cell"><span class="win-tag radar">RADAR</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="win-cell"><span class="win-tag optical">NDVI</span></td>
+            <td class="cov-cell">6/6</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="matrix-legend">
+      <span><span class="win-tag optical">NDVI</span> leitura óptica limpa (Sentinel-2)</span>
+      <span><span class="win-tag radar">RADAR</span> óptico bloqueado por nuvem — preenchido por radar (Sentinel-1)</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">Leituras pontuais — Autoban e Motiva Paraná</div>
+    <div class="single-grid">
+      <div class="single-card">
+        <div class="rodovia">Autoban · SP-348</div>
+        <div class="loc">Rodovia dos Bandeirantes, região de Campinas</div>
+        <dl>
+          <div class="row"><dt>Coordenada</dt><dd class="mono">-22.94490, -47.12701</dd></div>
+          <div class="row"><dt>NDVI</dt><dd class="mono">56,0%</dd></div>
+          <div class="row"><dt>Leitura</dt><dd class="mono">30 jun 2026</dd></div>
+        </dl>
+      </div>
+      <div class="single-card">
+        <div class="rodovia">Motiva Paraná · BR-376</div>
+        <div class="loc">Serra do Mar (Rodovia Henrique Herwig)</div>
+        <dl>
+          <div class="row"><dt>Coordenada</dt><dd class="mono">-25.53498, -49.19328</dd></div>
+          <div class="row"><dt>NDVI</dt><dd class="mono">31,3%</dd></div>
+          <div class="row"><dt>Leitura</dt><dd class="mono">15 jul 2026</dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="footnote" style="margin-top:14px;">Autoban e Motiva Paraná têm uma leitura real de NDVI confirmada (mesma origem e método dos 5 trechos da Fernão Dias), mas ainda não passaram pela mesma comparação de série de 90 dias com preenchimento por radar — esse é o próximo trecho a estender, não algo já coberto nesta página.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">Metodologia</div>
+    <p class="footnote">Todos os valores desta página vêm de uma busca real, feita uma única vez, via Copernicus Data Space Ecosystem (Statistical API para NDVI e radar, Process API para as imagens da galeria do dashboard) — não há chamada de API em produção; os dados ficam gravados de forma estática no protótipo. NDVI é calculado a partir das bandas B04/B08 do Sentinel-2 (com máscara de nuvem via banda SCL); o radar usa a banda VV do Sentinel-1 GRD, modo IW, sem correção atmosférica adicional além do processamento padrão Gamma0 terreno. "Cobertura" nesta página mede disponibilidade de leitura por janela de 15 dias, não precisão do dado — não substitui a calibração de campo que o protótipo já assume como pendência (ver painel de detalhe de cada trecho no dashboard).</p>
+    <ul class="footnote sources">
+      <li>Copernicus Data Space Ecosystem — <a href="https://dataspace.copernicus.eu/" target="_blank" rel="noopener">dataspace.copernicus.eu</a></li>
+      <li>ESA — Sentinel-2 User Guide (revisita, bandas espectrais)</li>
+      <li>ESA — Sentinel-1 User Guide (modos de aquisição, polarização, revisita)</li>
+    </ul>
+  </section>
+</div>

@@ -5,7 +5,8 @@ Protótipo de monitoramento inteligente da faixa de domínio — proposta para o
 ## Conteúdo
 
 - `index.html` — protótipo interativo (dashboard). Sem build, sem dependências externas em runtime (nenhuma chamada de API acontece no navegador do usuário).
-- `images/` — 4 imagens reais de satélite (Sentinel-2), uma por rodovia/trecho, buscadas uma única vez via Copernicus Data Space Ecosystem e servidas como arquivo estático.
+- `sentinel-status.html` — página dedicada de status técnico do monitoramento por satélite (cobertura NDVI + radar, specs dos sensores, matriz de 90 dias por trecho). Acessível pelo link na seção "Evidência real" do dashboard.
+- `images/` — 8 imagens reais de satélite (Sentinel-2), foto real + índice de vegetação por rodovia/trecho, buscadas uma única vez via Copernicus Data Space Ecosystem e servidas como arquivo estático.
 - `faixa_viva_proposta.docx` — documento de proposta técnica que acompanha o protótipo.
 
 ## Rodar localmente
@@ -21,7 +22,7 @@ Hospede a pasta inteira (não só o `index.html`) em qualquer serviço estático
 
 ## Contexto
 
-Dados de vegetação, custos de roçada e séries temporais no protótipo são majoritariamente simulados (com semente fixa, para reprodutibilidade), com exceção dos custos de referência do SICRO/DNIT citados diretamente no conteúdo. Ver a seção "Como isso funcionaria com dados reais" dentro do próprio protótipo para o plano de uso de dados reais.
+Dados de vegetação, custos de roçada e séries temporais no protótipo são majoritariamente simulados (com semente fixa, para reprodutibilidade), com exceção dos custos de referência do SICRO/DNIT citados diretamente no conteúdo.
 
 Nas 3 rodovias, a geometria dos trechos (posições em km e coordenadas) é real, extraída da relação de cada rodovia no OpenStreetMap via Overpass API — não simulada. Cada trecho tem um link "Ver coordenada real no mapa" que abre a localização real no OpenStreetMap. Fernão Dias: ~87 km reais (São Paulo/SP até a divisa com Minas Gerais). Autoban: ~58,4 km reais (Rodovia dos Bandeirantes rumo a Campinas). Motiva Paraná: ~14,6 km reais (descida da Serra do Mar, BR-376, rumo a Paranaguá). A altura de vegetação em acostamentos e as causas de alerta continuam simuladas em todas as três.
 
@@ -29,6 +30,6 @@ A cobertura vegetal dos 5 trechos de talude da Fernão Dias é real: NDVI do Sen
 
 A seção "Evidência real" traz 4 imagens de satélite reais (Sentinel-2, RGB verdadeiro), uma de cada uma das 3 rodovias operadas pela Motiva usadas no protótipo (Fernão Dias, Autoban, Motiva Paraná/BR-376), buscadas via Copernicus para as coordenadas reais de cada trecho. Cada card tem um toggle "Foto real" / "Índice de vegetação" que troca para uma segunda imagem real — a mesma cena renderizada por NDVI (verde = cobertura densa, marrom = esparsa/solo exposto) — acompanhada do valor real de NDVI (%) e a data da leitura. Não são câmeras ao vivo — a Fernão Dias ainda não tem câmeras instaladas, e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.
 
-Cada um dos 5 trechos de talude com NDVI real também tem uma camada de radar (Sentinel-1 GRD, banda VV) buscada nas mesmas janelas de 15 dias — visível no painel de detalhe como "Cobertura de monitoramento". O radar atravessa nuvem e funciona de dia ou de noite: no período verificado, o óptico teve leitura válida em 20 das 30 janelas possíveis (67%, por causa de nuvem) e o radar cobriu as 30 (100%). O radar mede refletividade de superfície, não é um índice de vegetação — não substitui o NDVI, só garante que nenhum trecho fica sem leitura no período.
+Cada um dos 5 trechos de talude com NDVI real também tem uma camada de radar (Sentinel-1 GRD, banda VV) buscada nas mesmas janelas de 15 dias — visível no painel de detalhe como "Cobertura de monitoramento", e detalhada por completo em `sentinel-status.html`. O radar atravessa nuvem e funciona de dia ou de noite: no período verificado, o óptico teve leitura válida em 20 das 30 janelas possíveis (67%, por causa de nuvem) e o radar cobriu as 30 (100%). O radar mede refletividade de superfície, não é um índice de vegetação — não substitui o NDVI, só garante que nenhum trecho fica sem leitura no período.
 
 Para regenerar essas imagens/NDVI/radar com dados mais recentes, é necessário um Client ID/Secret gratuito da Copernicus Data Space Ecosystem (ver `.env.local`, fora do git) — as chamadas ficam em scripts Python usados uma única vez, nunca embutidas no `index.html`.
