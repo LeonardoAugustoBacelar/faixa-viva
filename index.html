@@ -295,6 +295,21 @@
     .print-report .pr-alert{font-size:11.5px; padding:4px 0; border-bottom:1px solid #eee;}
   }
 
+  /* ---------- satellite gallery ---------- */
+  .gallery-panel{margin-bottom:20px;}
+  .gallery-hint{font-size:12px; color:var(--ink-faint); margin-bottom:14px; line-height:1.5;}
+  .gallery-strip{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  @media (max-width:920px){ .gallery-strip{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .gallery-strip{grid-template-columns:1fr;} }
+  .gallery-card{border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface-2);}
+  .gallery-card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#111;}
+  .gallery-card-body{padding:10px 12px 12px;}
+  .gallery-card-rodovia{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--accent);}
+  .gallery-card-loc{font-size:12.5px; color:var(--ink); margin-top:2px; font-weight:600;}
+  .gallery-card-meta{font-size:11px; color:var(--ink-faint); margin-top:4px; line-height:1.5;}
+  .gallery-card-link{font-size:11px; color:var(--accent); text-decoration:none; display:inline-block; margin-top:6px;}
+  .gallery-card-link:hover{text-decoration:underline;}
+
   /* ---------- geo badge ---------- */
   .geo-badge{
     display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--accent);
@@ -361,6 +376,52 @@
     </div>
     <div class="kpis" id="kpis"></div>
   </div>
+
+  <section class="panel gallery-panel">
+    <div class="panel-head">
+      <h2>Evidência real — imagens de satélite (Sentinel-2)</h2>
+      <span class="geo-badge">Dado real · não é vídeo ao vivo</span>
+    </div>
+    <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje (ver nota "Riscos e mitigação"), e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.</div>
+    <div class="gallery-strip">
+      <div class="gallery-card">
+        <img src="images/fernaodias-tr04.jpg" alt="Imagem real de satélite do trecho TR-04 da Fernão Dias" loading="lazy">
+        <div class="gallery-card-body">
+          <div class="gallery-card-rodovia">Fernão Dias · BR-381</div>
+          <div class="gallery-card-loc">TR-04 · km 20,1–26,8 (talude)</div>
+          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-23.25751, -46.59098</div>
+          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-23.25751&mlon=-46.59098#map=16/-23.25751/-46.59098">Ver coordenada real no mapa ↗</a>
+        </div>
+      </div>
+      <div class="gallery-card">
+        <img src="images/fernaodias-tr11.jpg" alt="Imagem real de satélite do trecho TR-11 da Fernão Dias" loading="lazy">
+        <div class="gallery-card-body">
+          <div class="gallery-card-rodovia">Fernão Dias · BR-381</div>
+          <div class="gallery-card-loc">TR-11 · km 67–73,7 (talude)</div>
+          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-22.90273, -46.42383</div>
+          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-22.90273&mlon=-46.42383#map=16/-22.90273/-46.42383">Ver coordenada real no mapa ↗</a>
+        </div>
+      </div>
+      <div class="gallery-card">
+        <img src="images/autoban.jpg" alt="Imagem real de satélite da Autoban, Rodovia dos Bandeirantes" loading="lazy">
+        <div class="gallery-card-body">
+          <div class="gallery-card-rodovia">Autoban · SP-348</div>
+          <div class="gallery-card-loc">Rodovia dos Bandeirantes, região de Campinas</div>
+          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-22.94490, -47.12701</div>
+          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-22.9449037&mlon=-47.1270059#map=16/-22.9449037/-47.1270059">Ver coordenada real no mapa ↗</a>
+        </div>
+      </div>
+      <div class="gallery-card">
+        <img src="images/parana.jpg" alt="Imagem real de satélite da BR-376, Serra do Mar, Paraná" loading="lazy">
+        <div class="gallery-card-body">
+          <div class="gallery-card-rodovia">Motiva Paraná · BR-376</div>
+          <div class="gallery-card-loc">Serra do Mar (Rodovia Henrique Herwig)</div>
+          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-25.53498, -49.19328</div>
+          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-25.534981&mlon=-49.1932822#map=16/-25.534981/-49.1932822">Ver coordenada real no mapa ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <div class="banner-stack">
     <div class="context-banner" id="contextBanner"></div>
