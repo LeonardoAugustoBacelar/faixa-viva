@@ -464,10 +464,10 @@
   <details class="tech-note">
     <summary>Como isso funcionaria com dados reais</summary>
     <div class="tech-note-body">
-      Esta tela usa dados sintéticos, gerados com semente fixa, para demonstrar o comportamento da ferramenta. Em produção, o pipeline seria:
+      A maior parte desta tela usa dados sintéticos, gerados com semente fixa, para demonstrar o comportamento da ferramenta. Duas partes, porém, já não são simuladas: a geometria da Fernão Dias (posições em km e coordenadas reais, via OpenStreetMap/Overpass) e a cobertura vegetal dos 5 trechos de talude mapeados, cujo valor e série de 90 dias vêm de NDVI real do Sentinel-2, obtido via Copernicus Data Space Ecosystem (Statistical API) para as coordenadas exatas de cada trecho — ver o selo "Dado real" no painel de detalhe. Em produção, o pipeline completo seria:
       <ul>
-        <li><strong>Captura — acostamento</strong> — visão computacional sobre as câmeras de detecção automática já previstas no pacote de investimento da Fernão Dias (implantação em até 24 meses). É a fonte principal para curvas e trechos de sinalização, onde a leitura precisa ser em escala métrica e o hardware já vai estar instalado por outro motivo.</li>
-        <li><strong>Captura — talude e contexto amplo</strong> — imagens gratuitas do Sentinel-2 (Copernicus/ESA), com revisita de ~5 dias, complementadas por voos de drone programados em trechos sem cobertura de câmera, pontes e viadutos.</li>
+        <li><strong>Captura — acostamento</strong> — visão computacional sobre as câmeras de detecção automática já previstas no pacote de investimento da Fernão Dias (implantação em até 24 meses). É a fonte principal para curvas e trechos de sinalização, onde a leitura precisa ser em escala métrica e o hardware já vai estar instalado por outro motivo. Ainda simulado neste protótipo.</li>
+        <li><strong>Captura — talude e contexto amplo</strong> — imagens gratuitas do Sentinel-2 (Copernicus/ESA), com revisita de ~5 dias, complementadas por voos de drone programados em trechos sem cobertura de câmera, pontes e viadutos. <strong>Já implementado neste protótipo</strong> para os 5 trechos de talude da Fernão Dias — os valores de cobertura vegetal exibidos vêm de leitura real, não de simulação.</li>
         <li><strong>Processamento</strong> — conversão da leitura de câmera/índice espectral em métrica operacional por trecho: altura estimada de vegetação em acostamentos, percentual de cobertura vegetal em taludes.</li>
         <li><strong>Detecção</strong> — comparação contínua contra limites operacionais de referência; cruzamentos de limite geram um score de risco e são classificados por causa (visibilidade, incêndio, drenagem, erosão). A baseline é recalibrada automaticamente após cada roçada registrada, para não gerar falso alerta logo depois de uma intervenção.</li>
         <li><strong>Priorização</strong> — score de urgência combina a magnitude do desvio, a velocidade de crescimento/perda e a criticidade do local (curvas, sinalização, pontes), gerando o ranking de intervenção.</li>
@@ -480,7 +480,7 @@
         <li><strong>Cobertura de nuvens</strong> no satélite pode atrasar uma leitura — mitigado pela revisita de ~5 dias e pela cobertura complementar de câmera nos trechos mais críticos.</li>
         <li><strong>Falso alerta pós-roçada</strong> — corrigido pela recalibração automática de baseline a cada intervenção registrada.</li>
         <li><strong>Integração com o CCO</strong> exige mapear o formato de alerta já em uso — mitigado começando com um piloto de escopo reduzido antes da integração completa.</li>
-        <li><strong>Custo de calibração inicial</strong> dos limites operacionais (altura, cobertura) por tipo de solo e cultivo de vegetação — mitigado validando com o time de conservação local no MVP, antes de escalar.</li>
+        <li><strong>Custo de calibração inicial</strong> dos limites operacionais (altura, cobertura) por tipo de solo e cultivo de vegetação — mitigado validando com o time de conservação local no MVP, antes de escalar. Isso já apareceu na prática: ao plugar NDVI real do Sentinel-2 nos 5 taludes mapeados da Fernão Dias, o limiar de 50% (calibrado para as curvas sintéticas) teria sinalizado a maioria dos trechos como alerta — cobertura vegetal rasteira real fica tipicamente entre 40–70%. Por isso a escalada para alerta nesses trechos usa um limiar mais conservador, deixado explícito no protótipo; a calibração final é exatamente o trabalho a validar com a concessionária no MVP.</li>
       </ul>
       <p style="margin:14px 0 4px; color:var(--ink);"><strong>Alinhamento com o que já importa para a Motiva</strong></p>
       <p>A CCR RioSP foi reconhecida no Prêmio ANTT de Sustentabilidade Ambiental 2025. O Faixa Viva foi desenhado para ser um candidato natural a esse mesmo tipo de reconhecimento em futuras edições — não é uma ferramenta genérica de NDVI, é uma resposta a uma obrigação contratual que a concessionária já tem (zelar pela integridade da faixa de domínio) e a um ativo que ela já está construindo (as câmeras da Fernão Dias).</p>
@@ -520,21 +520,26 @@
       contexto: '<b>Piloto proposto para a BR-381 (Fernão Dias)</b> — 569 km assumidos pela Motiva em abril de 2026, com R$ 14,8 bi em investimentos previstos, incluindo câmeras de detecção automática em até 24 meses. O Faixa Viva foi desenhado para rodar sobre essa mesma infraestrutura nos acostamentos, sem custo adicional de hardware.',
       mapHint: 'Trecho inicial real da Fernão Dias a partir de São Paulo/SP — geometria e distâncias de OpenStreetMap (relação BR-381), não simulada',
       realGeometry: true,
-      // [id, tipo, kmStart, kmEnd, startVal, endVal, causaKey, landmark]
+      // [id, tipo, kmStart, kmEnd, startVal, endVal, causaKey, landmark, realSeries]
       raw: [
         ['TR-01','mato',0.0,6.7,12,14,null],
-        ['TR-02','talude',6.7,13.4,78,80,null,'Nas proximidades do Túnel Mata Fria (245 m) — estrutura real na Fernão Dias, verificada via OpenStreetMap.'],
+        ['TR-02','talude',6.7,13.4,78,80,null,'Nas proximidades do Túnel Mata Fria (245 m) — estrutura real na Fernão Dias, verificada via OpenStreetMap.',
+          [{day:15,val:52.6},{day:45,val:72.9},{day:75,val:68.5}]],
         ['TR-03','mato',13.4,20.1,14,68,'visibilidade'],
-        ['TR-04','talude',20.1,26.8,72,62,'erosao'],
+        ['TR-04','talude',20.1,26.8,72,62,'erosao',null,
+          [{day:15,val:16.7},{day:45,val:41.9},{day:60,val:19.5},{day:75,val:37.7}]],
         ['TR-05','mato',26.8,33.5,10,16,null],
         ['TR-06','mato',33.5,40.2,16,22,'drenagem'],
         ['TR-07','mato',40.2,46.9,18,36,'incendio'],
-        ['TR-08','talude',46.9,53.6,75,60,'erosao'],
+        ['TR-08','talude',46.9,53.6,75,60,'erosao',null,
+          [{day:15,val:30.7},{day:45,val:57.2},{day:60,val:57.5},{day:75,val:52.8}]],
         ['TR-09','mato',53.6,60.3,11,15,null],
         ['TR-10','mato',60.3,67.0,20,62,'incendio'],
-        ['TR-11','talude',67.0,73.7,80,74,null],
+        ['TR-11','talude',67.0,73.7,80,74,null,null,
+          [{day:15,val:59.4},{day:45,val:58.6},{day:60,val:61.7},{day:75,val:57.1}]],
         ['TR-12','mato',73.7,80.3,15,20,'visibilidade'],
-        ['TR-13','talude',80.3,87.0,70,73,null]
+        ['TR-13','talude',80.3,87.0,70,73,null,null,
+          [{day:15,val:23.3},{day:30,val:33.2},{day:45,val:57.8},{day:60,val:59.6},{day:75,val:54.8}]]
       ],
       realCoords: {
         'TR-01':[-23.41953,-46.5699], 'TR-02':[-23.36555,-46.56936], 'TR-03':[-23.31292,-46.57557],
@@ -626,18 +631,29 @@
     return null;
   }
 
+  // Segmentos com leitura real de NDVI (Sentinel-2) usam limiares de status mais
+  // conservadores (70/45 em vez de 55/25): cobertura real de vegetação rasteira em
+  // taludes rodoviários tipicamente fica na faixa de 40–70%, então o limiar sintético
+  // de 50% — calibrado para as curvas sintéticas — sinalizaria quase todo trecho real
+  // como alerta. A referência de 50% continua exibida no gráfico (é uma métrica
+  // ecológica real), só a escalada para "crítico/atenção" foi recalibrada. Isso ainda
+  // precisa de validação de campo com o time de conservação local (ver nota de riscos).
+  const REAL_DAY_LABEL = {0:'01 mai 2026',15:'16 mai 2026',30:'31 mai 2026',45:'15 jun 2026',60:'30 jun 2026',75:'15 jul 2026'};
+
   function computeSegments(raw){
-    return raw.map(([id,tipo,kmStart,kmEnd,start,end,causaKey,landmark])=>{
-      const series = genSeries(tipo,start,end);
+    return raw.map(([id,tipo,kmStart,kmEnd,start,end,causaKey,landmark,realSeries])=>{
+      const series = realSeries || genSeries(tipo,start,end);
       const baselineAvg = (series[0].val+series[1].val+series[2].val)/3;
       const current = series[series.length-1].val;
       let score;
       if(tipo==='mato') score = Math.max(0,Math.min(100, Math.round((current-12)/(70-12)*100)));
       else score = Math.max(0,Math.min(100, Math.round((70-current)/(70-20)*100)));
-      let status = score>=55 ? 'critico' : score>=25 ? 'atencao' : 'estavel';
+      const critThresh = realSeries ? 70 : 55;
+      const attnThresh = realSeries ? 45 : 25;
+      let status = score>=critThresh ? 'critico' : score>=attnThresh ? 'atencao' : 'estavel';
       const causaInfo = (status==='critico'||status==='atencao') ? CAUSA[causaKey] : null;
       const anomalyDay = (status==='critico'||status==='atencao') ? findCrossDay(series,tipo) : null;
-      return {id, tipo, kmStart:Math.round(kmStart*10)/10, kmEnd:Math.round(kmEnd*10)/10, km: Math.round((kmEnd-kmStart)*10)/10, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay, landmark};
+      return {id, tipo, kmStart:Math.round(kmStart*10)/10, kmEnd:Math.round(kmEnd*10)/10, km: Math.round((kmEnd-kmStart)*10)/10, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay, landmark, realData: !!realSeries};
     });
   }
 
@@ -689,7 +705,7 @@
     document.getElementById('mapHeading').textContent = 'Mapa da rodovia — '+RODOVIAS[currentKey].nome;
     document.getElementById('mapHint').textContent = RODOVIAS[currentKey].mapHint+' · cada segmento representa um trecho, largura proporcional à extensão · clique para ver o histórico';
     document.getElementById('geoBadge').innerHTML = RODOVIAS[currentKey].realGeometry
-      ? '<span class="geo-badge">Geometria e distâncias reais (OpenStreetMap) · altura de vegetação simulada</span>'
+      ? '<span class="geo-badge">Geometria real (OpenStreetMap) · cobertura vegetal dos taludes real (NDVI/Sentinel-2) · altura em acostamentos ainda simulada</span>'
       : '<span class="geo-badge" style="color:var(--ink-muted);background:var(--surface-2);border-color:var(--border);">Geometria e dados simulados — piloto real ainda não mapeado nesta rodovia</span>';
     const ruler = document.getElementById('routeRuler');
     const steps = 4;
@@ -821,17 +837,24 @@
     el.innerHTML =
       '<div class="detail-title-row">'+
         '<div><h2>'+p.id+' · '+TIPO_LABEL[p.tipo]+'</h2><div class="detail-crop">km '+p.kmStart+'–'+p.kmEnd+' · '+p.km+' km</div></div>'+
-        '<span class="badge" style="'+badgeStyle+'">'+STATUS_LABEL[p.status]+'</span>'+
+        '<div style="display:flex; gap:6px; align-items:center;">'+
+          (p.realData?'<span class="badge" style="background:var(--accent-soft);color:var(--accent);">Dado real</span>':'')+
+          '<span class="badge" style="'+badgeStyle+'">'+STATUS_LABEL[p.status]+'</span>'+
+        '</div>'+
       '</div>'+
       '<div class="detail-stats">'+
         '<div><div class="stat-label">'+metricLabel(p.tipo)+'</div><div class="stat-value">'+Math.round(p.current)+unit(p.tipo)+'</div></div>'+
         '<div><div class="stat-label">Variação no período</div><div class="stat-value" style="color:'+deltaColor+'">'+deltaText+'</div></div>'+
       '</div>'+
       '<div class="chart-wrap">'+buildChart(p)+'</div>'+
-      '<div class="detail-note">'+causeLine+(p.landmark?' '+p.landmark:'')+'</div>'+
+      '<div class="detail-note">'+causeLine+(p.landmark?' '+p.landmark:'')+
+        (p.realData?' <em>Cobertura calculada a partir de NDVI real (Sentinel-2). O limiar de escalada para alerta desta métrica ainda não foi validado com o time de conservação local — tratado como referência, não como alerta operacional definitivo (ver "Riscos e mitigação").</em>':'')+
+      '</div>'+
       '<div class="action-box"><b>Ação recomendada</b>'+actionText+'</div>'+
       renderOSBlock(p)+
-      '<div class="fonte-tag"><span class="fonte-dot"></span>Fonte de dado: '+FONTE_LABEL[p.tipo]+'</div>'+
+      '<div class="fonte-tag"><span class="fonte-dot" style="'+(p.realData?'background:var(--accent);':'')+'"></span>Fonte de dado: '+
+        (p.realData ? 'NDVI real — Sentinel-2 L2A via Copernicus Data Space Ecosystem (leitura de '+REAL_DAY_LABEL[p.series[p.series.length-1].day]+')' : FONTE_LABEL[p.tipo])+
+      '</div>'+
       renderMapLink(p);
 
     const btn = document.getElementById('osBtn');
