@@ -302,7 +302,20 @@
   @media (max-width:920px){ .gallery-strip{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:520px){ .gallery-strip{grid-template-columns:1fr;} }
   .gallery-card{border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface-2);}
-  .gallery-card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#111;}
+  .gallery-card-img-wrap{position:relative; aspect-ratio:1/1; background:#111;}
+  .gallery-card-img-wrap img{width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0; opacity:0; transition:opacity 0.2s;}
+  .gallery-card-img-wrap img.active{opacity:1;}
+  .gallery-toggle{position:absolute; top:8px; left:8px; right:8px; display:flex; gap:4px; z-index:2;}
+  .gallery-toggle button{
+    flex:1; font-family:var(--font-body); font-size:10.5px; font-weight:600; padding:5px 6px; border-radius:999px;
+    border:1px solid rgba(255,255,255,0.35); background:rgba(10,12,8,0.55); color:#fff; cursor:pointer; backdrop-filter:blur(2px);
+  }
+  .gallery-toggle button.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .ndvi-gauge-row{display:flex; align-items:center; gap:8px; margin-top:8px;}
+  .ndvi-gauge-wrap{flex:1; height:8px; border-radius:4px; background:linear-gradient(90deg,#b08a4a,#e0c94a,#8fc23c,#2f8f3a); position:relative;}
+  .ndvi-gauge-marker{position:absolute; top:-3px; width:2px; height:14px; background:var(--ink); box-shadow:0 0 0 1px var(--surface);}
+  .ndvi-gauge-value{font-family:var(--font-mono); font-size:12px; font-weight:700; white-space:nowrap;}
+  .ndvi-gauge-label{font-size:10px; color:var(--ink-faint); margin-top:3px;}
   .gallery-card-body{padding:10px 12px 12px;}
   .gallery-card-rodovia{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--accent);}
   .gallery-card-loc{font-size:12.5px; color:var(--ink); margin-top:2px; font-weight:600;}
@@ -382,45 +395,8 @@
       <h2>Evidência real — imagens de satélite (Sentinel-2)</h2>
       <span class="geo-badge">Dado real · não é vídeo ao vivo</span>
     </div>
-    <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje (ver nota "Riscos e mitigação"), e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.</div>
-    <div class="gallery-strip">
-      <div class="gallery-card">
-        <img src="images/fernaodias-tr04.jpg" alt="Imagem real de satélite do trecho TR-04 da Fernão Dias" loading="lazy">
-        <div class="gallery-card-body">
-          <div class="gallery-card-rodovia">Fernão Dias · BR-381</div>
-          <div class="gallery-card-loc">TR-04 · km 20,1–26,8 (talude)</div>
-          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-23.25751, -46.59098</div>
-          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-23.25751&mlon=-46.59098#map=16/-23.25751/-46.59098">Ver coordenada real no mapa ↗</a>
-        </div>
-      </div>
-      <div class="gallery-card">
-        <img src="images/fernaodias-tr11.jpg" alt="Imagem real de satélite do trecho TR-11 da Fernão Dias" loading="lazy">
-        <div class="gallery-card-body">
-          <div class="gallery-card-rodovia">Fernão Dias · BR-381</div>
-          <div class="gallery-card-loc">TR-11 · km 67–73,7 (talude)</div>
-          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-22.90273, -46.42383</div>
-          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-22.90273&mlon=-46.42383#map=16/-22.90273/-46.42383">Ver coordenada real no mapa ↗</a>
-        </div>
-      </div>
-      <div class="gallery-card">
-        <img src="images/autoban.jpg" alt="Imagem real de satélite da Autoban, Rodovia dos Bandeirantes" loading="lazy">
-        <div class="gallery-card-body">
-          <div class="gallery-card-rodovia">Autoban · SP-348</div>
-          <div class="gallery-card-loc">Rodovia dos Bandeirantes, região de Campinas</div>
-          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-22.94490, -47.12701</div>
-          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-22.9449037&mlon=-47.1270059#map=16/-22.9449037/-47.1270059">Ver coordenada real no mapa ↗</a>
-        </div>
-      </div>
-      <div class="gallery-card">
-        <img src="images/parana.jpg" alt="Imagem real de satélite da BR-376, Serra do Mar, Paraná" loading="lazy">
-        <div class="gallery-card-body">
-          <div class="gallery-card-rodovia">Motiva Paraná · BR-376</div>
-          <div class="gallery-card-loc">Serra do Mar (Rodovia Henrique Herwig)</div>
-          <div class="gallery-card-meta">Sentinel-2 L2A · leitura de 15 jul 2026<br>-25.53498, -49.19328</div>
-          <a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=-25.534981&mlon=-49.1932822#map=16/-25.534981/-49.1932822">Ver coordenada real no mapa ↗</a>
-        </div>
-      </div>
-    </div>
+    <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Clique em "Índice de vegetação" em cada card para ver o mesmo ponto colorido por densidade real de cobertura vegetal (verde = denso, marrom = esparso/solo exposto) — é o mesmo cálculo de NDVI usado nos taludes da Fernão Dias no painel principal, aplicado aqui às 4 imagens. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje (ver nota "Riscos e mitigação"), e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.</div>
+    <div class="gallery-strip" id="gallery"></div>
   </section>
 
   <div class="banner-stack">
@@ -1157,10 +1133,65 @@
     });
   }
 
+  /* ---------------- satellite gallery ---------------- */
+  const GALLERY = [
+    {
+      id:'fernaodias-tr04', rodovia:'Fernão Dias · BR-381', loc:'TR-04 · km 20,1–26,8 (talude)',
+      lat:-23.25751, lon:-46.59098, date:'15 jul 2026', ndvi:37.7
+    },
+    {
+      id:'fernaodias-tr11', rodovia:'Fernão Dias · BR-381', loc:'TR-11 · km 67–73,7 (talude)',
+      lat:-22.90273, lon:-46.42383, date:'15 jul 2026', ndvi:57.1
+    },
+    {
+      id:'autoban', rodovia:'Autoban · SP-348', loc:'Rodovia dos Bandeirantes, região de Campinas',
+      lat:-22.9449037, lon:-47.1270059, date:'30 jun 2026', ndvi:56.0
+    },
+    {
+      id:'parana', rodovia:'Motiva Paraná · BR-376', loc:'Serra do Mar (Rodovia Henrique Herwig)',
+      lat:-25.5349810, lon:-49.1932822, date:'15 jul 2026', ndvi:31.3
+    }
+  ];
+  function renderGallery(){
+    const el = document.getElementById('gallery');
+    el.innerHTML = GALLERY.map(g=>
+      '<div class="gallery-card">'+
+        '<div class="gallery-card-img-wrap">'+
+          '<div class="gallery-toggle">'+
+            '<button type="button" class="active" data-card="'+g.id+'" data-view="foto">Foto real</button>'+
+            '<button type="button" data-card="'+g.id+'" data-view="ndvi">Índice de vegetação</button>'+
+          '</div>'+
+          '<img class="active" data-view="foto" src="images/'+g.id+'.jpg" alt="Imagem real de satélite — '+g.rodovia+'" loading="lazy">'+
+          '<img data-view="ndvi" src="images/'+g.id+'-ndvi.jpg" alt="Índice de vegetação real (NDVI) — '+g.rodovia+'" loading="lazy">'+
+        '</div>'+
+        '<div class="gallery-card-body">'+
+          '<div class="gallery-card-rodovia">'+g.rodovia+'</div>'+
+          '<div class="gallery-card-loc">'+g.loc+'</div>'+
+          '<div class="gallery-card-meta">Sentinel-2 L2A · leitura de '+g.date+'<br>'+g.lat+', '+g.lon+'</div>'+
+          '<div class="ndvi-gauge-row">'+
+            '<div class="ndvi-gauge-wrap"><div class="ndvi-gauge-marker" style="left:'+g.ndvi+'%;"></div></div>'+
+            '<span class="ndvi-gauge-value">'+g.ndvi.toFixed(1)+'%</span>'+
+          '</div>'+
+          '<div class="ndvi-gauge-label">Índice de vegetação real (NDVI × 100) neste ponto exato — não é altura em cm, é proxy de densidade de cobertura vegetal.</div>'+
+          '<a class="gallery-card-link" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+g.lat+'&mlon='+g.lon+'#map=16/'+g.lat+'/'+g.lon+'">Ver coordenada real no mapa ↗</a>'+
+        '</div>'+
+      '</div>'
+    ).join('');
+    el.querySelectorAll('.gallery-toggle button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const card = btn.dataset.card, view = btn.dataset.view;
+        const wrap = btn.closest('.gallery-card-img-wrap');
+        wrap.querySelectorAll('.gallery-toggle button').forEach(b=>b.classList.toggle('active', b===btn));
+        wrap.querySelectorAll('img').forEach(img=>img.classList.toggle('active', img.dataset.view===view));
+      });
+    });
+  }
+
   initRoi();
   initCostInput();
   initExport();
   renderCostPanel();
+  renderGallery();
   loadRodovia('fernaodias');
 })();
 </script>
