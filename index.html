@@ -298,6 +298,38 @@
     .print-report .pr-alert{font-size:11.5px; padding:4px 0; border-bottom:1px solid #eee;}
   }
 
+  /* ---------- map hero banner ---------- */
+  .map-hero{
+    position:relative; border-radius:var(--radius); overflow:hidden; margin-bottom:20px;
+    min-height:400px; border:1px solid var(--border); display:block; text-decoration:none;
+    background-image:url('images/fernaodias-tr04.jpg'); background-size:cover; background-position:center;
+  }
+  .map-hero-overlay{
+    position:absolute; inset:0;
+    background:linear-gradient(100deg, rgba(8,12,8,0.94) 0%, rgba(8,12,8,0.86) 38%, rgba(8,12,8,0.35) 75%, rgba(8,12,8,0.1) 100%);
+    display:flex; flex-direction:column; justify-content:center; padding:30px clamp(20px,4vw,48px);
+  }
+  .map-hero-tag{
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start; font-family:var(--font-mono);
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#8FE0A8;
+    background:rgba(95,190,124,0.16); border:1px solid rgba(95,190,124,0.5); border-radius:999px; padding:4px 12px; margin-bottom:14px;
+  }
+  .map-hero-tag .pulse{width:6px; height:6px; border-radius:50%; background:#8FE0A8; box-shadow:0 0 0 0 rgba(143,224,168,0.6); animation:heroPulse 2s infinite;}
+  @keyframes heroPulse{ 0%{box-shadow:0 0 0 0 rgba(143,224,168,0.55);} 70%{box-shadow:0 0 0 8px rgba(143,224,168,0);} 100%{box-shadow:0 0 0 0 rgba(143,224,168,0);} }
+  .map-hero h2{color:#fff; font-size:clamp(22px,3vw,32px); font-weight:700; letter-spacing:-0.01em; margin:0 0 10px; max-width:560px; line-height:1.15;}
+  .map-hero p{color:rgba(255,255,255,0.82); font-size:14px; line-height:1.55; max-width:480px; margin:0 0 20px;}
+  .map-hero-stats{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:22px;}
+  .map-hero-stats .s{display:flex; flex-direction:column;}
+  .map-hero-stats .s b{color:#fff; font-family:var(--font-mono); font-size:17px; font-weight:700;}
+  .map-hero-stats .s span{color:rgba(255,255,255,0.6); font-size:10.5px; text-transform:uppercase; letter-spacing:0.03em; margin-top:1px;}
+  .map-hero-cta{
+    display:inline-flex; align-items:center; gap:8px; align-self:flex-start; font-family:var(--font-body);
+    font-size:14px; font-weight:700; color:var(--accent-ink); background:var(--accent); border:none;
+    border-radius:var(--radius); padding:12px 22px; transition:transform 0.15s, box-shadow 0.15s;
+  }
+  .map-hero:hover .map-hero-cta{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,0.35);}
+  @media (max-width:640px){ .map-hero{min-height:440px;} .map-hero-overlay{background:linear-gradient(180deg, rgba(8,12,8,0.55) 0%, rgba(8,12,8,0.96) 55%);} }
+
   /* ---------- satellite gallery ---------- */
   .gallery-panel{margin-bottom:20px;}
   .gallery-hint{font-size:12px; color:var(--ink-faint); margin-bottom:14px; line-height:1.5;}
@@ -398,16 +430,27 @@
     <div class="kpis" id="kpis"></div>
   </div>
 
+  <a class="map-hero" href="mapa.html">
+    <div class="map-hero-overlay">
+      <span class="map-hero-tag"><span class="pulse"></span>Novo · dado real</span>
+      <h2>Mapa ao vivo — rotas e satélite em tela cheia</h2>
+      <p>As 3 rodovias, os 7 pontos com leitura real de satélite e uma linha do tempo arrastável pelas datas verificadas — tudo num mapa real, não numa lista.</p>
+      <div class="map-hero-stats">
+        <div class="s"><b>3</b><span>Rodovias</span></div>
+        <div class="s"><b>7</b><span>Pontos reais</span></div>
+        <div class="s"><b>6</b><span>Datas na linha do tempo</span></div>
+      </div>
+      <span class="map-hero-cta">Abrir mapa ao vivo →</span>
+    </div>
+  </a>
+
   <section class="panel gallery-panel">
     <div class="panel-head">
       <h2>Evidência real — imagens de satélite (Sentinel-2)</h2>
       <span class="geo-badge">Dado real · não é vídeo ao vivo</span>
     </div>
     <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Clique em "Índice de vegetação" em cada card para ver o mesmo ponto colorido por densidade real de cobertura vegetal (verde = denso, marrom = esparso/solo exposto) — é o mesmo cálculo de NDVI usado nos taludes da Fernão Dias no painel principal, aplicado aqui às 4 imagens. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje, e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.
-      <span style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
-        <a href="mapa.html" style="color:var(--accent); font-weight:600; text-decoration:none;">Ver mapa ao vivo (rotas reais + linha do tempo) →</a>
-        <a href="sentinel-status.html" style="color:var(--accent); font-weight:600; text-decoration:none;">Ver status técnico do satélite →</a>
-      </span>
+      <a href="sentinel-status.html" style="display:inline-block; margin-top:8px; color:var(--accent); font-weight:600; text-decoration:none;">Ver status técnico completo do satélite (cobertura, sensores, matriz de 90 dias) →</a>
     </div>
     <div class="gallery-strip" id="gallery"></div>
   </section>
