@@ -6,6 +6,7 @@ Protótipo de monitoramento inteligente da faixa de domínio — proposta para o
 
 - `index.html` — protótipo interativo (dashboard). Sem build, sem dependências externas em runtime (nenhuma chamada de API acontece no navegador do usuário).
 - `sentinel-status.html` — página dedicada de status técnico do monitoramento por satélite (cobertura NDVI + radar, specs dos sensores, matriz de 90 dias por trecho). Acessível pelo link na seção "Evidência real" do dashboard.
+- `mapa.html` — mapa ao vivo em tela cheia (estilo Windy.com/NASA Worldview) com as rotas reais das 3 rodovias e os 7 pontos monitorados, mais uma linha do tempo arrastável pelas 6 datas reais verificadas. Única página do projeto com dependência externa em runtime: carrega o Leaflet (JS/CSS, via CDN unpkg.com) e os tiles do basemap escuro da CARTO/OpenStreetMap — precisa de internet para funcionar, diferente do resto do site.
 - `images/` — 8 imagens reais de satélite (Sentinel-2), foto real + índice de vegetação por rodovia/trecho, buscadas uma única vez via Copernicus Data Space Ecosystem e servidas como arquivo estático.
 - `faixa_viva_proposta.docx` — documento de proposta técnica que acompanha o protótipo.
 

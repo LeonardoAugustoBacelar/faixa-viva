@@ -1,0 +1,257 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faixa Viva — Mapa ao Vivo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  :root{
+    --ink:#181A15; --ink-muted:#565948; --ink-faint:#888C74; --border:#D8DACB;
+    --accent:#2C6B4A; --accent-ink:#FFFFFF; --accent-soft:#DCEBDF;
+    --healthy:#3F8C57; --radar:#5B7FA6; --warning:#B87A1F;
+    --panel-bg:rgba(16,20,16,0.82); --panel-bg-2:rgba(16,20,16,0.65);
+    --panel-border:rgba(255,255,255,0.12); --panel-ink:#EDEFE6; --panel-ink-muted:#A7AC96;
+    --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --font-mono:"SF Mono","Cascadia Code","Roboto Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; height:100%; overflow:hidden; font-family:var(--font-body); background:#0b0d0a;}
+  #map{position:fixed; inset:0; background:#0b0d0a;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  .glass{
+    background:var(--panel-bg); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--panel-border); border-radius:8px; color:var(--panel-ink);
+    box-shadow:0 8px 28px rgba(0,0,0,0.35);
+  }
+
+  .top-left{position:absolute; top:16px; left:16px; z-index:1000; padding:12px 16px; max-width:300px;}
+  .top-left .back{font-size:11px; color:var(--panel-ink-muted); text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-bottom:6px;}
+  .top-left .back:hover{color:#fff;}
+  .top-left h1{font-family:var(--font-mono); font-size:15px; font-weight:700; margin:0 0 3px; letter-spacing:-0.01em;}
+  .top-left .sub{font-size:11px; color:var(--panel-ink-muted); line-height:1.4;}
+
+  .top-right{position:absolute; top:16px; right:16px; z-index:1000; padding:12px 14px; font-size:11px;}
+  .top-right .row{display:flex; align-items:center; gap:7px; margin-bottom:6px;}
+  .top-right .row:last-child{margin-bottom:0;}
+  .top-right .sw{width:10px; height:10px; border-radius:50%; flex:none;}
+  .top-right a{display:block; margin-top:8px; padding-top:8px; border-top:1px solid var(--panel-border); color:var(--accent-soft); text-decoration:none; font-weight:600;}
+  .top-right a:hover{text-decoration:underline;}
+
+  .stat-bar{
+    position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:1000;
+    padding:9px 22px; display:flex; gap:22px; align-items:center;
+  }
+  .stat-bar .item{text-align:center;}
+  .stat-bar .item .v{font-family:var(--font-mono); font-size:16px; font-weight:700;}
+  .stat-bar .item .l{font-size:9px; text-transform:uppercase; letter-spacing:0.04em; color:var(--panel-ink-muted); margin-top:1px;}
+
+  .timeline-wrap{position:absolute; left:16px; right:16px; bottom:16px; z-index:1000; padding:14px 20px 16px;}
+  .timeline-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .timeline-head .label{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--panel-ink-muted);}
+  .timeline-head .date{font-family:var(--font-mono); font-size:15px; font-weight:700;}
+  .timeline-track{position:relative; height:34px;}
+  .timeline-line{position:absolute; top:16px; left:0; right:0; height:2px; background:rgba(255,255,255,0.18); border-radius:1px;}
+  .timeline-tick{position:absolute; top:9px; width:16px; height:16px; margin-left:-8px; border-radius:50%; cursor:pointer; border:2px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); transition:transform 0.15s;}
+  .timeline-tick:hover{transform:scale(1.15);}
+  .timeline-tick.active{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 4px rgba(95,190,124,0.25);}
+  .timeline-tick-label{position:absolute; top:26px; left:50%; transform:translateX(-50%); font-size:9.5px; font-family:var(--font-mono); color:var(--panel-ink-muted); white-space:nowrap;}
+  .timeline-legend{display:flex; gap:16px; margin-top:14px; font-size:10.5px; color:var(--panel-ink-muted);}
+  .timeline-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .timeline-legend .sw{width:9px; height:9px; border-radius:2px;}
+
+  .marker-dot{border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 3px rgba(0,0,0,0.35);}
+
+  .popup-card{font-family:var(--font-body); min-width:220px;}
+  .popup-card .rodovia{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent); font-weight:700;}
+  .popup-card .loc{font-size:13px; font-weight:700; margin:2px 0 8px; color:var(--ink);}
+  .popup-card img{width:100%; border-radius:4px; margin-bottom:8px; display:block;}
+  .popup-card .row{display:flex; justify-content:space-between; font-size:11.5px; padding:4px 0; border-top:1px solid var(--border); color:var(--ink-muted);}
+  .popup-card .row:first-of-type{border-top:none;}
+  .popup-card .row b{color:var(--ink); font-family:var(--font-mono);}
+  .popup-card .no-data{font-size:11.5px; color:var(--ink-faint); font-style:italic; padding:6px 0;}
+  .leaflet-popup-content-wrapper{border-radius:8px;}
+
+  @media (max-width:720px){
+    .stat-bar{display:none;}
+    .top-left{max-width:220px;}
+    .top-right{display:none;}
+  }
+</style>
+
+<div id="map"></div>
+
+<div class="top-left glass">
+  <a class="back" href="index.html">&larr; Voltar ao dashboard</a>
+  <h1>FAIXA VIVA · MAPA AO VIVO</h1>
+  <div class="sub">Rotas e pontos reais das 3 rodovias monitoradas. Arraste a linha do tempo embaixo para ver a fonte de dado (NDVI ou radar) em cada data real verificada.</div>
+</div>
+
+<div class="stat-bar glass" id="statBar"></div>
+
+<div class="top-right glass">
+  <div class="row"><span class="sw" style="background:var(--healthy);"></span>NDVI real (Sentinel-2)</div>
+  <div class="row"><span class="sw" style="background:var(--radar);"></span>Radar (Sentinel-1)</div>
+  <div class="row"><span class="sw" style="background:#666;"></span>Sem leitura nesta data</div>
+  <a href="sentinel-status.html">Ver status técnico completo →</a>
+</div>
+
+<div class="timeline-wrap glass">
+  <div class="timeline-head">
+    <span class="label">Linha do tempo — dados reais verificados</span>
+    <span class="date mono" id="timelineDate">15 jul 2026</span>
+  </div>
+  <div class="timeline-track" id="timelineTrack"></div>
+  <div class="timeline-legend">
+    <span><span class="sw" style="background:var(--healthy);"></span>Leitura óptica limpa</span>
+    <span><span class="sw" style="background:var(--radar);"></span>Preenchido por radar (nuvem)</span>
+    <span>Não é reprodução ao vivo — 6 datas reais de mai–jul 2026, buscadas uma única vez via Copernicus.</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  const FERNAO_DIAS_ROUTE = [[-23.41953,-46.5699],[-23.36555,-46.56936],[-23.31292,-46.57557],[-23.25751,-46.59098],[-23.20053,-46.58813],[-23.14256,-46.57449],[-23.08367,-46.57031],[-23.03331,-46.54615],[-22.98927,-46.504],[-22.94461,-46.46513],[-22.90273,-46.42383],[-22.87186,-46.37257],[-22.84025,-46.32055]];
+  const AUTOBAN_ROUTE = [[-23.13776,-46.97323],[-23.10228,-47.00656],[-23.06583,-47.03908],[-23.02979,-47.07202],[-22.99248,-47.10185],[-22.95077,-47.12241],[-22.91996,-47.15269],[-22.90367,-47.19936],[-22.88378,-47.24372],[-22.86344,-47.28822],[-22.84434,-47.3346]];
+  const PARANA_ROUTE = [[-25.65397,-49.15677],[-25.64342,-49.15931],[-25.63267,-49.16282],[-25.62213,-49.16713],[-25.6119,-49.17082],[-25.60138,-49.17299],[-25.59111,-49.17382],[-25.58099,-49.17678],[-25.57064,-49.18124],[-25.56032,-49.18474],[-25.55,-49.18824],[-25.53971,-49.19183]];
+
+  const DATES = [
+    {day:0,  label:'01 mai 2026', short:'01 mai'},
+    {day:15, label:'16 mai 2026', short:'16 mai'},
+    {day:30, label:'31 mai 2026', short:'31 mai'},
+    {day:45, label:'15 jun 2026', short:'15 jun'},
+    {day:60, label:'30 jun 2026', short:'30 jun'},
+    {day:75, label:'15 jul 2026', short:'15 jul'}
+  ];
+
+  // readings[day] = {source:'optical'|'radar'|'none', ndvi: number|null}
+  const POINTS = [
+    {
+      id:'TR-02', rodovia:'Fernão Dias · BR-381', loc:'TR-02 · km 6,7–13,4 (talude)',
+      coord:[-23.36555,-46.56936], photo:null,
+      readings:{0:{source:'radar',ndvi:null},15:{source:'optical',ndvi:52.6},30:{source:'radar',ndvi:null},45:{source:'optical',ndvi:72.9},60:{source:'radar',ndvi:null},75:{source:'optical',ndvi:68.5}}
+    },
+    {
+      id:'TR-04', rodovia:'Fernão Dias · BR-381', loc:'TR-04 · km 20,1–26,8 (talude)',
+      coord:[-23.25751,-46.59098], photo:'images/fernaodias-tr04.jpg',
+      readings:{0:{source:'radar',ndvi:null},15:{source:'optical',ndvi:16.7},30:{source:'radar',ndvi:null},45:{source:'optical',ndvi:41.9},60:{source:'optical',ndvi:19.5},75:{source:'optical',ndvi:37.7}}
+    },
+    {
+      id:'TR-08', rodovia:'Fernão Dias · BR-381', loc:'TR-08 · km 46,9–53,6 (talude)',
+      coord:[-23.03331,-46.54615], photo:null,
+      readings:{0:{source:'radar',ndvi:null},15:{source:'optical',ndvi:30.7},30:{source:'radar',ndvi:null},45:{source:'optical',ndvi:57.2},60:{source:'optical',ndvi:57.5},75:{source:'optical',ndvi:52.8}}
+    },
+    {
+      id:'TR-11', rodovia:'Fernão Dias · BR-381', loc:'TR-11 · km 67–73,7 (talude)',
+      coord:[-22.90273,-46.42383], photo:'images/fernaodias-tr11.jpg',
+      readings:{0:{source:'radar',ndvi:null},15:{source:'optical',ndvi:59.4},30:{source:'radar',ndvi:null},45:{source:'optical',ndvi:58.6},60:{source:'optical',ndvi:61.7},75:{source:'optical',ndvi:57.1}}
+    },
+    {
+      id:'TR-13', rodovia:'Fernão Dias · BR-381', loc:'TR-13 · km 80,3–87 (talude)',
+      coord:[-22.84025,-46.32055], photo:null,
+      readings:{0:{source:'radar',ndvi:null},15:{source:'optical',ndvi:23.3},30:{source:'optical',ndvi:33.2},45:{source:'optical',ndvi:57.8},60:{source:'optical',ndvi:59.6},75:{source:'optical',ndvi:54.8}}
+    },
+    {
+      id:'Autoban', rodovia:'Autoban · SP-348', loc:'Rodovia dos Bandeirantes, região de Campinas',
+      coord:[-22.9449037,-47.1270059], photo:'images/autoban.jpg',
+      readings:{0:{source:'none',ndvi:null},15:{source:'none',ndvi:null},30:{source:'none',ndvi:null},45:{source:'none',ndvi:null},60:{source:'optical',ndvi:56.0},75:{source:'none',ndvi:null}}
+    },
+    {
+      id:'Paraná', rodovia:'Motiva Paraná · BR-376', loc:'Serra do Mar (Rodovia Henrique Herwig)',
+      coord:[-25.5349810,-49.1932822], photo:'images/parana.jpg',
+      readings:{0:{source:'none',ndvi:null},15:{source:'none',ndvi:null},30:{source:'none',ndvi:null},45:{source:'none',ndvi:null},60:{source:'none',ndvi:null},75:{source:'optical',ndvi:31.3}}
+    }
+  ];
+
+  const COLOR = {optical:'#3F8C57', radar:'#5B7FA6', none:'#666666'};
+
+  const map = L.map('map', {zoomControl:false, attributionControl:true}).setView([-23.9,-47.6], 7);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  [FERNAO_DIAS_ROUTE, AUTOBAN_ROUTE, PARANA_ROUTE].forEach(route=>{
+    L.polyline(route, {color:'#E9ECDF', weight:2.5, opacity:0.55}).addTo(map);
+  });
+
+  const allPts = FERNAO_DIAS_ROUTE.concat(AUTOBAN_ROUTE, PARANA_ROUTE);
+  map.fitBounds(L.latLngBounds(allPts), {padding:[60,60]});
+
+  let currentDay = 75;
+
+  const markers = {};
+  POINTS.forEach(p=>{
+    const icon = L.divIcon({className:'', html:'<div class="marker-dot" id="dot-'+p.id+'" style="width:16px;height:16px;background:'+COLOR.none+';"></div>', iconSize:[16,16], iconAnchor:[8,8]});
+    const m = L.marker(p.coord, {icon}).addTo(map);
+    m.bindPopup(buildPopup(p, currentDay), {className:'popup-card-wrap'});
+    markers[p.id] = m;
+  });
+
+  function buildPopup(p, day){
+    const r = p.readings[day];
+    let body = '<div class="popup-card">'+
+      '<div class="rodovia">'+p.rodovia+'</div>'+
+      '<div class="loc">'+p.loc+'</div>'+
+      (p.photo ? '<img src="'+p.photo+'" alt="Imagem real de satélite — '+p.id+'">' : '')+
+      '<div class="row"><span>Coordenada</span><b>'+p.coord[0].toFixed(4)+', '+p.coord[1].toFixed(4)+'</b></div>';
+    if(r.source==='optical'){
+      body += '<div class="row"><span>NDVI real</span><b style="color:var(--healthy);">'+r.ndvi.toFixed(1)+'%</b></div>';
+      body += '<div class="row"><span>Fonte</span><b>Sentinel-2 (óptico)</b></div>';
+    } else if(r.source==='radar'){
+      body += '<div class="row"><span>Fonte</span><b style="color:var(--radar);">Sentinel-1 (radar)</b></div>';
+      body += '<div class="no-data">Óptico bloqueado por nuvem nesta data — cobertura confirmada por radar, sem valor de NDVI.</div>';
+    } else {
+      body += '<div class="no-data">Sem leitura registrada nesta data neste protótipo.</div>';
+    }
+    body += '<div class="row"><a href="https://www.openstreetmap.org/?mlat='+p.coord[0]+'&mlon='+p.coord[1]+'#map=15/'+p.coord[0]+'/'+p.coord[1]+'" target="_blank" rel="noopener" style="color:var(--accent);">Ver coordenada real no mapa ↗</a></div>';
+    body += '</div>';
+    return body;
+  }
+
+  function renderTimeline(){
+    const track = document.getElementById('timelineTrack');
+    track.innerHTML = '<div class="timeline-line"></div>';
+    DATES.forEach((d,i)=>{
+      const pct = (i/(DATES.length-1))*100;
+      const tick = document.createElement('div');
+      tick.className = 'timeline-tick'+(d.day===currentDay?' active':'');
+      tick.style.left = pct+'%';
+      tick.title = d.label;
+      tick.addEventListener('click', ()=>{ currentDay = d.day; update(); });
+      const lbl = document.createElement('div');
+      lbl.className = 'timeline-tick-label';
+      lbl.style.left = pct+'%';
+      lbl.textContent = d.short;
+      track.appendChild(tick);
+      track.appendChild(lbl);
+    });
+  }
+
+  function renderStatBar(){
+    const readings = POINTS.map(p=>p.readings[currentDay]);
+    const optical = readings.filter(r=>r.source==='optical').length;
+    const radar = readings.filter(r=>r.source==='radar').length;
+    const none = readings.filter(r=>r.source==='none').length;
+    document.getElementById('statBar').innerHTML =
+      '<div class="item"><div class="v mono" style="color:var(--healthy);">'+optical+'</div><div class="l">NDVI nesta data</div></div>'+
+      '<div class="item"><div class="v mono" style="color:var(--radar);">'+radar+'</div><div class="l">Radar nesta data</div></div>'+
+      '<div class="item"><div class="v mono">'+(optical+radar)+'/7</div><div class="l">Pontos com leitura</div></div>';
+  }
+
+  function update(){
+    document.getElementById('timelineDate').textContent = DATES.find(d=>d.day===currentDay).label;
+    POINTS.forEach(p=>{
+      const r = p.readings[currentDay];
+      const dot = document.getElementById('dot-'+p.id);
+      if(dot) dot.style.background = COLOR[r.source];
+      markers[p.id].setPopupContent(buildPopup(p, currentDay));
+    });
+    renderTimeline();
+    renderStatBar();
+  }
+
+  update();
+})();
+</script>
