@@ -295,6 +295,12 @@
     .print-report .pr-alert{font-size:11.5px; padding:4px 0; border-bottom:1px solid #eee;}
   }
 
+  /* ---------- geo badge ---------- */
+  .geo-badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--accent);
+    background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:3px 10px; margin-top:8px;
+  }
+
   /* ---------- fonte tag ---------- */
   .fonte-tag{
     display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-muted);
@@ -368,6 +374,7 @@
         <div class="legend" id="legend"></div>
       </div>
       <div class="panel-hint" id="mapHint"></div>
+      <div id="geoBadge"></div>
       <div class="route-strip-wrap">
         <div class="route-strip" id="routeStrip"></div>
       </div>
@@ -511,23 +518,31 @@
       nome: 'Fernão Dias (BR-381)',
       kmTotalReal: 569,
       contexto: '<b>Piloto proposto para a BR-381 (Fernão Dias)</b> — 569 km assumidos pela Motiva em abril de 2026, com R$ 14,8 bi em investimentos previstos, incluindo câmeras de detecção automática em até 24 meses. O Faixa Viva foi desenhado para rodar sobre essa mesma infraestrutura nos acostamentos, sem custo adicional de hardware.',
-      mapHint: 'Simulação dos km 0–96 da Fernão Dias, sob concessão Motiva desde abril de 2026',
-      // [id, tipo, kmStart, kmEnd, startVal, endVal, causaKey]
+      mapHint: 'Trecho inicial real da Fernão Dias a partir de São Paulo/SP — geometria e distâncias de OpenStreetMap (relação BR-381), não simulada',
+      realGeometry: true,
+      // [id, tipo, kmStart, kmEnd, startVal, endVal, causaKey, landmark]
       raw: [
-        ['TR-01','mato',0,6,12,14,null],
-        ['TR-02','talude',6,14,78,80,null],
-        ['TR-03','mato',14,19,14,68,'visibilidade'],
-        ['TR-04','talude',19,27,72,62,'erosao'],
-        ['TR-05','mato',27,33,10,16,null],
-        ['TR-06','mato',33,40,16,22,'drenagem'],
-        ['TR-07','mato',40,48,18,36,'incendio'],
-        ['TR-08','talude',48,55,75,60,'erosao'],
-        ['TR-09','mato',55,63,11,15,null],
-        ['TR-10','mato',63,70,20,62,'incendio'],
-        ['TR-11','talude',70,78,80,74,null],
-        ['TR-12','mato',78,87,15,20,'visibilidade'],
-        ['TR-13','talude',87,96,70,73,null]
+        ['TR-01','mato',0.0,6.7,12,14,null],
+        ['TR-02','talude',6.7,13.4,78,80,null,'Nas proximidades do Túnel Mata Fria (245 m) — estrutura real na Fernão Dias, verificada via OpenStreetMap.'],
+        ['TR-03','mato',13.4,20.1,14,68,'visibilidade'],
+        ['TR-04','talude',20.1,26.8,72,62,'erosao'],
+        ['TR-05','mato',26.8,33.5,10,16,null],
+        ['TR-06','mato',33.5,40.2,16,22,'drenagem'],
+        ['TR-07','mato',40.2,46.9,18,36,'incendio'],
+        ['TR-08','talude',46.9,53.6,75,60,'erosao'],
+        ['TR-09','mato',53.6,60.3,11,15,null],
+        ['TR-10','mato',60.3,67.0,20,62,'incendio'],
+        ['TR-11','talude',67.0,73.7,80,74,null],
+        ['TR-12','mato',73.7,80.3,15,20,'visibilidade'],
+        ['TR-13','talude',80.3,87.0,70,73,null]
       ],
+      realCoords: {
+        'TR-01':[-23.41953,-46.5699], 'TR-02':[-23.36555,-46.56936], 'TR-03':[-23.31292,-46.57557],
+        'TR-04':[-23.25751,-46.59098], 'TR-05':[-23.20053,-46.58813], 'TR-06':[-23.14256,-46.57449],
+        'TR-07':[-23.08367,-46.57031], 'TR-08':[-23.03331,-46.54615], 'TR-09':[-22.98927,-46.504],
+        'TR-10':[-22.94461,-46.46513], 'TR-11':[-22.90273,-46.42383], 'TR-12':[-22.87186,-46.37257],
+        'TR-13':[-22.84025,-46.32055]
+      },
       history: [
         ['18 mai 2026','TR-05','Vegetação obstruindo sinalização','Roçada mecânica','62 cm → 9 cm'],
         ['03 jun 2026','TR-13','Cobertura vegetal baixa em talude','Hidrossemeadura de contenção','32% → 61%'],
@@ -612,7 +627,7 @@
   }
 
   function computeSegments(raw){
-    return raw.map(([id,tipo,kmStart,kmEnd,start,end,causaKey])=>{
+    return raw.map(([id,tipo,kmStart,kmEnd,start,end,causaKey,landmark])=>{
       const series = genSeries(tipo,start,end);
       const baselineAvg = (series[0].val+series[1].val+series[2].val)/3;
       const current = series[series.length-1].val;
@@ -622,7 +637,7 @@
       let status = score>=55 ? 'critico' : score>=25 ? 'atencao' : 'estavel';
       const causaInfo = (status==='critico'||status==='atencao') ? CAUSA[causaKey] : null;
       const anomalyDay = (status==='critico'||status==='atencao') ? findCrossDay(series,tipo) : null;
-      return {id, tipo, kmStart, kmEnd, km: kmEnd-kmStart, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay};
+      return {id, tipo, kmStart:Math.round(kmStart*10)/10, kmEnd:Math.round(kmEnd*10)/10, km: Math.round((kmEnd-kmStart)*10)/10, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay, landmark};
     });
   }
 
@@ -641,7 +656,7 @@
 
   /* ---------------- KPIs ---------------- */
   function renderKPIs(){
-    const totalKm = segments.reduce((s,p)=>s+p.km,0);
+    const totalKm = Math.round(segments.reduce((s,p)=>s+p.km,0)*10)/10;
     const alertSegs = segments.filter(p=>p.status==='critico'||p.status==='atencao');
     const alertKm = alertSegs.reduce((s,p)=>s+p.km,0);
     const fireSegs = segments.filter(p=>p.causaKey==='incendio' && (p.status==='critico'||p.status==='atencao'));
@@ -673,6 +688,9 @@
     const totalKm = segments.reduce((s,p)=>s+p.km,0);
     document.getElementById('mapHeading').textContent = 'Mapa da rodovia — '+RODOVIAS[currentKey].nome;
     document.getElementById('mapHint').textContent = RODOVIAS[currentKey].mapHint+' · cada segmento representa um trecho, largura proporcional à extensão · clique para ver o histórico';
+    document.getElementById('geoBadge').innerHTML = RODOVIAS[currentKey].realGeometry
+      ? '<span class="geo-badge">Geometria e distâncias reais (OpenStreetMap) · altura de vegetação simulada</span>'
+      : '<span class="geo-badge" style="color:var(--ink-muted);background:var(--surface-2);border-color:var(--border);">Geometria e dados simulados — piloto real ainda não mapeado nesta rodovia</span>';
     const ruler = document.getElementById('routeRuler');
     const steps = 4;
     ruler.innerHTML = Array.from({length:steps+1}, (_,i)=>'<span>km '+Math.round(totalKm*i/steps)+'</span>').join('');
@@ -810,13 +828,24 @@
         '<div><div class="stat-label">Variação no período</div><div class="stat-value" style="color:'+deltaColor+'">'+deltaText+'</div></div>'+
       '</div>'+
       '<div class="chart-wrap">'+buildChart(p)+'</div>'+
-      '<div class="detail-note">'+causeLine+'</div>'+
+      '<div class="detail-note">'+causeLine+(p.landmark?' '+p.landmark:'')+'</div>'+
       '<div class="action-box"><b>Ação recomendada</b>'+actionText+'</div>'+
       renderOSBlock(p)+
-      '<div class="fonte-tag"><span class="fonte-dot"></span>Fonte de dado: '+FONTE_LABEL[p.tipo]+'</div>';
+      '<div class="fonte-tag"><span class="fonte-dot"></span>Fonte de dado: '+FONTE_LABEL[p.tipo]+'</div>'+
+      renderMapLink(p);
 
     const btn = document.getElementById('osBtn');
     if(btn){ btn.addEventListener('click', ()=>{ issueOS(p); renderDetail(); renderFieldApp(); }); }
+  }
+
+  /* ---------------- real map link ---------------- */
+  function renderMapLink(p){
+    const coords = RODOVIAS[currentKey].realCoords;
+    const c = coords && coords[p.id];
+    if(!c) return '';
+    return '<a class="fonte-tag" style="text-decoration:none; margin-left:6px;" target="_blank" rel="noopener" '+
+      'href="https://www.openstreetmap.org/?mlat='+c[0]+'&mlon='+c[1]+'#map=15/'+c[0]+'/'+c[1]+'">'+
+      '<span class="fonte-dot" style="background:var(--accent);"></span>Ver coordenada real no mapa ↗</a>';
   }
 
   /* ---------------- ordem de serviço ---------------- */
@@ -946,7 +975,7 @@
     document.getElementById('roiSavings').textContent = fmtMoney(km*savingsPerKm());
   }
   function updateRoiForCurrentRodovia(){
-    const pilotKm = segments.reduce((s,p)=>s+p.km,0);
+    const pilotKm = Math.round(segments.reduce((s,p)=>s+p.km,0)*10)/10;
     const rodovia = RODOVIAS[currentKey];
     roiPresets = [
       {km:pilotKm, label:'Trecho simulado · '+pilotKm+' km'},
@@ -1022,7 +1051,7 @@
   /* ---------------- compliance report export ---------------- */
   function buildReportHTML(){
     const rodovia = RODOVIAS[currentKey];
-    const totalKm = segments.reduce((s,p)=>s+p.km,0);
+    const totalKm = Math.round(segments.reduce((s,p)=>s+p.km,0)*10)/10;
     const alertSegs = segments.filter(p=>p.status==='critico'||p.status==='atencao').sort((a,b)=>b.score-a.score);
     const now = new Date();
     const dataStr = now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
