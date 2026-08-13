@@ -596,21 +596,28 @@
     autoban: {
       nome: 'Autoban (SP-330/SP-348)',
       kmTotalReal: 316.8,
-      contexto: '<b>Simulação para a Autoban (SP-330/SP-348)</b> — 316,8 km entre São Paulo e Cordeirópolis pela Via Anhanguera e Rodovia dos Bandeirantes, um dos corredores mais movimentados do país. Nesta malha mais urbanizada, o Faixa Viva se apoiaria nas câmeras de tráfego e detecção de incidentes já instaladas na via, complementadas por satélite nos taludes.',
-      mapHint: 'Simulação de 84 km da Autoban, corredor de alta densidade de tráfego e interseções',
+      contexto: '<b>Piloto proposto para a Autoban (SP-330/SP-348)</b> — 316,8 km entre São Paulo e Cordeirópolis pela Via Anhanguera e Rodovia dos Bandeirantes, um dos corredores mais movimentados do país. Nesta malha mais urbanizada, o Faixa Viva se apoiaria nas câmeras de tráfego e detecção de incidentes já instaladas na via, complementadas por satélite nos taludes.',
+      mapHint: 'Trecho inicial real da Rodovia dos Bandeirantes (SP-348), sentido Campinas — geometria e distâncias de OpenStreetMap, não simulada',
+      realGeometry: true,
       raw: [
-        ['AB-01','mato',0,7,12,15,null],
-        ['AB-02','mato',7,14,15,20,'visibilidade'],
-        ['AB-03','talude',14,20,74,70,null],
-        ['AB-04','mato',20,28,16,33,'incendio'],
-        ['AB-05','mato',28,34,11,14,null],
-        ['AB-06','talude',34,41,70,60,'erosao'],
-        ['AB-07','mato',41,49,18,60,'incendio'],
-        ['AB-08','mato',49,55,13,16,null],
-        ['AB-09','talude',55,61,78,75,null],
-        ['AB-10','mato',61,70,17,20,'visibilidade'],
-        ['AB-11','mato',70,84,20,66,'drenagem']
+        ['AB-01','mato',0.0,5.3,12,15,null],
+        ['AB-02','mato',5.3,10.6,15,20,'visibilidade'],
+        ['AB-03','talude',10.6,15.9,74,70,null],
+        ['AB-04','mato',15.9,21.2,16,33,'incendio'],
+        ['AB-05','mato',21.2,26.5,11,14,null],
+        ['AB-06','talude',26.5,31.8,70,60,'erosao'],
+        ['AB-07','mato',31.8,37.2,18,60,'incendio'],
+        ['AB-08','mato',37.2,42.5,13,16,null],
+        ['AB-09','talude',42.5,47.8,78,75,null],
+        ['AB-10','mato',47.8,53.1,17,20,'visibilidade'],
+        ['AB-11','mato',53.1,58.4,20,66,'drenagem']
       ],
+      realCoords: {
+        'AB-01':[-23.13776,-46.97323], 'AB-02':[-23.10228,-47.00656], 'AB-03':[-23.06583,-47.03908],
+        'AB-04':[-23.02979,-47.07202], 'AB-05':[-22.99248,-47.10185], 'AB-06':[-22.95077,-47.12241],
+        'AB-07':[-22.91996,-47.15269], 'AB-08':[-22.90367,-47.19936], 'AB-09':[-22.88378,-47.24372],
+        'AB-10':[-22.86344,-47.28822], 'AB-11':[-22.84434,-47.3346]
+      },
       history: [
         ['22 abr 2026','AB-08','Vegetação obstruindo sinalização em trevo','Roçada mecânica','58 cm → 8 cm'],
         ['10 mai 2026','AB-03','Cobertura vegetal baixa em talude marginal','Hidrossemeadura de contenção','41% → 72%'],
@@ -622,22 +629,29 @@
     parana: {
       nome: 'Motiva Paraná (BR-369/373/376)',
       kmTotalReal: 569,
-      contexto: '<b>Simulação para a Motiva Paraná (BR-369/373/376)</b> — 569 km até o Porto de Paranaguá, atravessando a Serra do Mar. Aqui o perfil de risco muda: a prioridade passa a ser cobertura vegetal em taludes íngremes, historicamente sujeitos a deslizamento em época de chuva.',
-      mapHint: 'Simulação de 90 km da Motiva Paraná, incluindo a descida da Serra do Mar até Paranaguá',
+      contexto: '<b>Piloto proposto para a Motiva Paraná (BR-369/373/376)</b> — 569 km até o Porto de Paranaguá, atravessando a Serra do Mar. Aqui o perfil de risco muda: a prioridade passa a ser cobertura vegetal em taludes íngremes, historicamente sujeitos a deslizamento em época de chuva.',
+      mapHint: 'Trecho inicial real da descida da Serra do Mar (BR-376) rumo a Paranaguá — geometria e distâncias de OpenStreetMap, não simulada',
+      realGeometry: true,
       raw: [
-        ['PR-01','mato',0,9,14,17,null],
-        ['PR-02','talude',9,16,75,68,null],
-        ['PR-03','talude',16,23,72,26,'erosao'],
-        ['PR-04','talude',23,29,68,60,'erosao'],
-        ['PR-05','talude',29,34,70,60,'erosao'],
-        ['PR-06','mato',34,42,15,20,'visibilidade'],
-        ['PR-07','mato',42,49,12,15,null],
-        ['PR-08','talude',49,56,74,72,null],
-        ['PR-09','mato',56,64,18,59,'incendio'],
-        ['PR-10','talude',64,71,73,46,'erosao'],
-        ['PR-11','mato',71,80,11,14,null],
-        ['PR-12','mato',80,90,16,20,'drenagem']
+        ['PR-01','mato',0.0,1.2,14,17,null],
+        ['PR-02','talude',1.2,2.4,75,68,null],
+        ['PR-03','talude',2.4,3.7,72,26,'erosao'],
+        ['PR-04','talude',3.7,4.9,68,60,'erosao'],
+        ['PR-05','talude',4.9,6.1,70,60,'erosao'],
+        ['PR-06','mato',6.1,7.3,15,20,'visibilidade'],
+        ['PR-07','mato',7.3,8.5,12,15,null],
+        ['PR-08','talude',8.5,9.8,74,72,null],
+        ['PR-09','mato',9.8,11.0,18,59,'incendio'],
+        ['PR-10','talude',11.0,12.2,73,46,'erosao'],
+        ['PR-11','mato',12.2,13.4,11,14,null],
+        ['PR-12','mato',13.4,14.6,16,20,'drenagem']
       ],
+      realCoords: {
+        'PR-01':[-25.65397,-49.15677], 'PR-02':[-25.64342,-49.15931], 'PR-03':[-25.63267,-49.16282],
+        'PR-04':[-25.62213,-49.16713], 'PR-05':[-25.6119,-49.17082], 'PR-06':[-25.60138,-49.17299],
+        'PR-07':[-25.59111,-49.17382], 'PR-08':[-25.58099,-49.17678], 'PR-09':[-25.57064,-49.18124],
+        'PR-10':[-25.56032,-49.18474], 'PR-11':[-25.55,-49.18824], 'PR-12':[-25.53971,-49.19183]
+      },
       history: [
         ['05 mai 2026','PR-08','Cobertura vegetal baixa em talude na Serra do Mar','Hidrossemeadura emergencial de contenção','35% → 70%'],
         ['19 mai 2026','PR-01','Vegetação obstruindo sinalização em curva','Roçada mecânica','54 cm → 7 cm'],
@@ -741,8 +755,9 @@
     const totalKm = segments.reduce((s,p)=>s+p.km,0);
     document.getElementById('mapHeading').textContent = 'Mapa da rodovia — '+RODOVIAS[currentKey].nome;
     document.getElementById('mapHint').textContent = RODOVIAS[currentKey].mapHint+' · cada segmento representa um trecho, largura proporcional à extensão · clique para ver o histórico';
+    const hasRealNDVI = segments.some(p=>p.realData);
     document.getElementById('geoBadge').innerHTML = RODOVIAS[currentKey].realGeometry
-      ? '<span class="geo-badge">Geometria real (OpenStreetMap) · cobertura vegetal dos taludes real (NDVI/Sentinel-2) · altura em acostamentos ainda simulada</span>'
+      ? '<span class="geo-badge">Geometria real (OpenStreetMap)'+(hasRealNDVI?' · cobertura vegetal dos taludes real (NDVI/Sentinel-2)':' · vegetação ainda simulada — ver imagem NDVI real desta rodovia na galeria acima')+' · altura em acostamentos ainda simulada</span>'
       : '<span class="geo-badge" style="color:var(--ink-muted);background:var(--surface-2);border-color:var(--border);">Geometria e dados simulados — piloto real ainda não mapeado nesta rodovia</span>';
     const ruler = document.getElementById('routeRuler');
     const steps = 4;
