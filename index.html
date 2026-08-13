@@ -250,18 +250,21 @@
   /* ---------- OS note ---------- */
   .os-note{font-size:11px; color:var(--ink-faint); margin-top:6px; line-height:1.5; font-style:italic;}
 
-  /* ---------- field app mockup ---------- */
+  /* ---------- field app preview ---------- */
   .field-app-panel{display:flex; flex-direction:column;}
   .field-app-wrap{display:flex; justify-content:center; margin-top:6px;}
   .phone{
-    width:100%; max-width:260px; border:1px solid var(--border); border-radius:22px; background:var(--surface-2);
-    padding:10px 10px 16px;
+    width:100%; max-width:280px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);
+    overflow:hidden; padding-bottom:10px;
   }
-  .phone-head{display:flex; align-items:center; justify-content:space-between; padding:2px 4px 10px; border-bottom:1px solid var(--border); margin-bottom:10px;}
-  .phone-head b{font-size:12.5px;}
+  .phone-head{
+    display:flex; align-items:center; justify-content:space-between; padding:10px 12px;
+    border-bottom:1px solid var(--border); background:var(--surface);
+  }
+  .phone-head b{font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink);}
   .phone-head span{font-size:10px; color:var(--ink-faint); font-family:var(--font-mono);}
-  .phone-empty{font-size:12px; color:var(--ink-faint); padding:20px 6px; text-align:center; line-height:1.5;}
-  .phone-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:9px 10px; margin-bottom:8px;}
+  .phone-empty{font-size:12px; color:var(--ink-faint); padding:24px 16px; text-align:center; line-height:1.6;}
+  .phone-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin:10px 10px 0;}
   .phone-card-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
   .phone-card-id{font-family:var(--font-mono); font-size:12px; font-weight:700;}
   .phone-card-cause{font-size:11.5px; color:var(--ink-muted); margin:4px 0 8px; line-height:1.4;}
@@ -270,7 +273,7 @@
     border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink); cursor:pointer;
   }
   .phone-btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
-  .phone-done{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--healthy); margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);}
+  .phone-done{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--healthy); margin:10px 12px 12px; padding-top:10px; border-top:1px dashed var(--border);}
 
   /* ---------- panel head actions ---------- */
   .panel-head-actions{display:flex; align-items:center; gap:8px;}
@@ -361,21 +364,14 @@
   .os-confirm b{display:block; color:var(--healthy); font-family:var(--font-mono); font-size:12.5px; margin-bottom:3px;}
 
   /* ---------- integration list ---------- */
-  .integration-list{list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:12px;}
-  .integration-list li{display:flex; gap:10px; font-size:12.5px; line-height:1.55; color:var(--ink-muted);}
-  .integration-list li::before{content:""; width:6px; height:6px; margin-top:6px; border-radius:1px; background:var(--accent); flex:none;}
-  .integration-list li b{color:var(--ink); font-weight:600;}
+  .integration-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column;}
+  .integration-list li{padding:13px 0; border-top:1px solid var(--border);}
+  .integration-list li:first-child{padding-top:2px; border-top:none;}
+  .integration-list .item-head{display:flex; align-items:baseline; gap:9px; margin-bottom:4px;}
+  .integration-list .item-num{font-family:var(--font-mono); font-size:10.5px; font-weight:700; color:var(--accent); letter-spacing:0.02em; flex:none;}
+  .integration-list .item-title{font-size:13px; font-weight:600; color:var(--ink);}
+  .integration-list .item-desc{font-size:12.5px; line-height:1.6; color:var(--ink-muted); padding-left:26px;}
 
-  /* ---------- tech note ---------- */
-  .tech-note{margin-top:20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:4px 18px;}
-  .tech-note summary{cursor:pointer; padding:14px 0; font-size:13px; font-weight:600; list-style:none; display:flex; align-items:center; gap:8px;}
-  .tech-note summary::-webkit-details-marker{display:none;}
-  .tech-note summary::before{content:"+"; font-family:var(--font-mono); color:var(--accent); font-weight:700;}
-  .tech-note[open] summary::before{content:"–";}
-  .tech-note-body{padding-bottom:16px; font-size:12.5px; line-height:1.65; color:var(--ink-muted);}
-  .tech-note-body ul{margin:8px 0; padding-left:18px;}
-  .tech-note-body li{margin-bottom:5px;}
-  .tech-note-body strong{color:var(--ink);}
 </style>
 
 <div class="app">
@@ -407,7 +403,7 @@
       <h2>Evidência real — imagens de satélite (Sentinel-2)</h2>
       <span class="geo-badge">Dado real · não é vídeo ao vivo</span>
     </div>
-    <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Clique em "Índice de vegetação" em cada card para ver o mesmo ponto colorido por densidade real de cobertura vegetal (verde = denso, marrom = esparso/solo exposto) — é o mesmo cálculo de NDVI usado nos taludes da Fernão Dias no painel principal, aplicado aqui às 4 imagens. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje (ver nota "Riscos e mitigação"), e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.</div>
+    <div class="gallery-hint">Imagem menos nublada disponível entre mai–jul 2026, buscada via Copernicus Data Space Ecosystem para as coordenadas reais de cada trecho — cobrindo as 3 rodovias operadas pela Motiva usadas neste protótipo, não só a Fernão Dias. Clique em "Índice de vegetação" em cada card para ver o mesmo ponto colorido por densidade real de cobertura vegetal (verde = denso, marrom = esparso/solo exposto) — é o mesmo cálculo de NDVI usado nos taludes da Fernão Dias no painel principal, aplicado aqui às 4 imagens. Ainda não é uma câmera ao vivo: a Fernão Dias não tem câmeras instaladas hoje, e o Sentinel-2 revisita cada ponto a cada ~5 dias, não em tempo real.</div>
     <div class="gallery-strip" id="gallery"></div>
   </section>
 
@@ -463,7 +459,7 @@
     <section class="panel cost-panel">
       <div class="panel-head"><h2>Manutenção fixa vs. orientada por dados</h2></div>
       <div class="cost-input-row">
-        <label for="costInput">Custo real de roçada por km que a concessionária já paga hoje — edite com o dado real para recalcular a economia:</label>
+        <label for="costInput">Custo real de roçada por km atualmente pago pela concessionária. Ajuste o valor para recalcular a economia com base no dado informado:</label>
         <div class="cost-input-field"><span>R$</span><input type="number" id="costInput" min="0" step="50" value="900" aria-label="Custo por roçada, por km"><span>/ roçada · km</span></div>
         <button type="button" class="cost-reset" id="costReset">Usar padrão</button>
       </div>
@@ -494,47 +490,21 @@
     <section class="panel integration-panel">
       <div class="panel-head"><h2>Como se integra à operação</h2></div>
       <ul class="integration-list">
-        <li><b>Reaproveita investimento já previsto:</b> a Fernão Dias já tem câmeras de detecção automática no pacote de investimento (implantação em até 24 meses) — o Faixa Viva usa essa mesma infraestrutura para os acostamentos, sem hardware adicional.</li>
-        <li><b>Centro de Controle Operacional:</b> alertas geolocalizados por km chegam ao CCO no mesmo fluxo hoje usado para tráfego e incidentes.</li>
-        <li><b>Evidência para auditorias:</b> registro automático de antes/depois por trecho apoia a comprovação do cumprimento das obrigações contratuais de manutenção da faixa de domínio.</li>
-        <li><b>Escala de equipes por risco:</b> conservação e roçada priorizadas pelo risco real do trecho, não por um calendário fixo.</li>
-        <li><b>Aplicativo de campo:</b> equipes recebem o km exato a tratar e o motivo do alerta, sem depender de inspeção visual prévia.</li>
-        <li><b>Uso racional de recursos:</b> apoia metas de sustentabilidade ao reduzir deslocamento, combustível e insumos de revegetação.</li>
+        <li><div class="item-head"><span class="item-num">01</span><span class="item-title">Reaproveita investimento já previsto</span></div><div class="item-desc">A Fernão Dias já tem câmeras de detecção automática no pacote de investimento (implantação em até 24 meses). O Faixa Viva opera sobre essa mesma infraestrutura para os acostamentos, sem hardware adicional.</div></li>
+        <li><div class="item-head"><span class="item-num">02</span><span class="item-title">Centro de Controle Operacional</span></div><div class="item-desc">Alertas geolocalizados por km chegam ao CCO no mesmo fluxo hoje usado para tráfego e incidentes.</div></li>
+        <li><div class="item-head"><span class="item-num">03</span><span class="item-title">Evidência para auditorias</span></div><div class="item-desc">Registro automático de antes/depois por trecho apoia a comprovação do cumprimento das obrigações contratuais de manutenção da faixa de domínio.</div></li>
+        <li><div class="item-head"><span class="item-num">04</span><span class="item-title">Escala de equipes por risco</span></div><div class="item-desc">Conservação e roçada priorizadas pelo risco real do trecho, não por um calendário fixo.</div></li>
+        <li><div class="item-head"><span class="item-num">05</span><span class="item-title">Aplicativo de campo</span></div><div class="item-desc">Equipes recebem o km exato a tratar e o motivo do alerta, sem depender de inspeção visual prévia.</div></li>
+        <li><div class="item-head"><span class="item-num">06</span><span class="item-title">Uso racional de recursos</span></div><div class="item-desc">Apoia metas de sustentabilidade ao reduzir deslocamento, combustível e insumos de revegetação.</div></li>
       </ul>
     </section>
 
     <section class="panel field-app-panel">
       <div class="panel-head"><h2>Aplicativo de campo</h2></div>
-      <div class="panel-hint">Mockup do que a equipe de roçada veria no celular ao receber uma OS emitida no painel ao lado.</div>
+      <div class="panel-hint">Pré-visualização do aplicativo de campo — o que a equipe de conservação recebe ao ser notificada de uma ordem de serviço emitida no painel ao lado.</div>
       <div class="field-app-wrap"><div id="fieldApp"></div></div>
     </section>
   </div>
-
-  <details class="tech-note">
-    <summary>Como isso funcionaria com dados reais</summary>
-    <div class="tech-note-body">
-      A maior parte desta tela usa dados sintéticos, gerados com semente fixa, para demonstrar o comportamento da ferramenta. Duas partes, porém, já não são simuladas: a geometria da Fernão Dias (posições em km e coordenadas reais, via OpenStreetMap/Overpass) e a cobertura vegetal dos 5 trechos de talude mapeados, cujo valor e série de 90 dias vêm de NDVI real do Sentinel-2, obtido via Copernicus Data Space Ecosystem (Statistical API) para as coordenadas exatas de cada trecho — ver o selo "Dado real" no painel de detalhe. Em produção, o pipeline completo seria:
-      <ul>
-        <li><strong>Captura — acostamento</strong> — visão computacional sobre as câmeras de detecção automática já previstas no pacote de investimento da Fernão Dias (implantação em até 24 meses). É a fonte principal para curvas e trechos de sinalização, onde a leitura precisa ser em escala métrica e o hardware já vai estar instalado por outro motivo. Ainda simulado neste protótipo.</li>
-        <li><strong>Captura — talude e contexto amplo</strong> — imagens gratuitas do Sentinel-2 (Copernicus/ESA), com revisita de ~5 dias, complementadas por voos de drone programados em trechos sem cobertura de câmera, pontes e viadutos. <strong>Já implementado neste protótipo</strong> para os 5 trechos de talude da Fernão Dias — os valores de cobertura vegetal exibidos vêm de leitura real, não de simulação.</li>
-        <li><strong>Processamento</strong> — conversão da leitura de câmera/índice espectral em métrica operacional por trecho: altura estimada de vegetação em acostamentos, percentual de cobertura vegetal em taludes.</li>
-        <li><strong>Detecção</strong> — comparação contínua contra limites operacionais de referência; cruzamentos de limite geram um score de risco e são classificados por causa (visibilidade, incêndio, drenagem, erosão). A baseline é recalibrada automaticamente após cada roçada registrada, para não gerar falso alerta logo depois de uma intervenção.</li>
-        <li><strong>Priorização</strong> — score de urgência combina a magnitude do desvio, a velocidade de crescimento/perda e a criticidade do local (curvas, sinalização, pontes), gerando o ranking de intervenção.</li>
-        <li><strong>Entrega</strong> — alertas no painel do CCO e no aplicativo das equipes de campo, com registro do resultado de cada roçada/intervenção para refinar o modelo ao longo do tempo.</li>
-      </ul>
-      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Por que segurança pesa tanto quanto economia</strong></p>
-      <p>Vegetação obstruindo sinalização é um risco já reconhecido judicialmente no setor rodoviário — em 2022 o DNIT foi condenado a indenizar em R$ 180 mil famílias de vítimas de um acidente na BR-267 em que a perícia apontou falta de sinalização e visibilidade adequadas entre os fatores contribuintes. Reduzir esse risco na faixa de domínio é, portanto, tanto uma questão de segurança viária quanto de exposição contratual e jurídica para a concessionária — não apenas economia operacional.</p>
-      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Riscos e mitigação</strong></p>
-      <ul>
-        <li><strong>Cobertura de nuvens</strong> no satélite pode atrasar uma leitura — mitigado pela revisita de ~5 dias, pela cobertura complementar de câmera nos trechos mais críticos e, desde esta versão, por uma camada de radar (Sentinel-1) como reserva: já testado nos 5 trechos de talude com NDVI real da Fernão Dias, onde o óptico teve leituras válidas em 20 das 30 janelas possíveis no período (67%, por causa de nuvem) e o radar cobriu as 30 (100%) — ver "Cobertura de monitoramento" no painel de detalhe de cada trecho.</li>
-        <li><strong>Falso alerta pós-roçada</strong> — corrigido pela recalibração automática de baseline a cada intervenção registrada.</li>
-        <li><strong>Integração com o CCO</strong> exige mapear o formato de alerta já em uso — mitigado começando com um piloto de escopo reduzido antes da integração completa.</li>
-        <li><strong>Custo de calibração inicial</strong> dos limites operacionais (altura, cobertura) por tipo de solo e cultivo de vegetação — mitigado validando com o time de conservação local no MVP, antes de escalar. Isso já apareceu na prática: ao plugar NDVI real do Sentinel-2 nos 5 taludes mapeados da Fernão Dias, o limiar de 50% (calibrado para as curvas sintéticas) teria sinalizado a maioria dos trechos como alerta — cobertura vegetal rasteira real fica tipicamente entre 40–70%. Por isso a escalada para alerta nesses trechos usa um limiar mais conservador, deixado explícito no protótipo; a calibração final é exatamente o trabalho a validar com a concessionária no MVP.</li>
-      </ul>
-      <p style="margin:14px 0 4px; color:var(--ink);"><strong>Alinhamento com o que já importa para a Motiva</strong></p>
-      <p>A CCR RioSP foi reconhecida no Prêmio ANTT de Sustentabilidade Ambiental 2025. O Faixa Viva foi desenhado para ser um candidato natural a esse mesmo tipo de reconhecimento em futuras edições — não é uma ferramenta genérica de NDVI, é uma resposta a uma obrigação contratual que a concessionária já tem (zelar pela integridade da faixa de domínio) e a um ativo que ela já está construindo (as câmeras da Fernão Dias).</p>
-    </div>
-  </details>
 
   <div class="print-report" id="printReport"></div>
 </div>
@@ -921,7 +891,7 @@
       '</div>'+
       '<div class="chart-wrap">'+buildChart(p)+'</div>'+
       '<div class="detail-note">'+causeLine+(p.landmark?' '+p.landmark:'')+
-        (p.realData?' <em>Cobertura calculada a partir de NDVI real (Sentinel-2). O limiar de escalada para alerta desta métrica ainda não foi validado com o time de conservação local — tratado como referência, não como alerta operacional definitivo (ver "Riscos e mitigação").</em>':'')+
+        (p.realData?' <em>Cobertura calculada a partir de NDVI real (Sentinel-2). O limiar de escalada para alerta desta métrica ainda não foi validado com o time de conservação local — tratado como referência, não como alerta operacional definitivo.</em>':'')+
       '</div>'+
       '<div class="action-box"><b>Ação recomendada</b>'+actionText+'</div>'+
       renderOSBlock(p)+
