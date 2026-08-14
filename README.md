@@ -35,7 +35,9 @@ Cada um dos 5 trechos de talude com NDVI real também tem uma camada de radar (S
 
 Para regenerar essas imagens/NDVI/radar com dados mais recentes, é necessário um Client ID/Secret gratuito da Copernicus Data Space Ecosystem (ver `.env.local`, fora do git) — as chamadas ficam em scripts Python usados uma única vez, nunca embutidas no `index.html`.
 
-Dois recursos do painel de detalhe rodam sobre esses mesmos dados reais, sem API nova:
+Recursos do painel de detalhe que rodam sobre esses mesmos dados reais, sem API nova:
+
+- **Nível de corte configurável por contexto de risco** — o alvo de altura em acostamento não é mais um número único (40cm) para toda a rodovia: trechos cuja causa de alerta é "visibilidade" (curva de raio reduzido ou sinalização próxima) usam um alvo mais rigoroso (25cm), refletindo que vegetação alta compromete visibilidade mais cedo nesses pontos. A escalada para atenção/crítico é recalculada proporcionalmente ao alvo de cada trecho, não só o número exibido — por isso alguns trechos que pareciam estáveis sob o limiar único (TR-12 na Fernão Dias, AB-02/AB-10 na Autoban, PR-06 na Paraná) passam a aparecer como atenção: o limiar antigo estava mascarando risco real nesses contextos. Cada trecho de acostamento mostra um selo explicando qual alvo está sendo usado e por quê.
 
 - **Projeção real de tendência** — para os 5 trechos com NDVI real, uma regressão linear simples sobre os pontos reais estima a velocidade de mudança (p.p./semana) e, quando a trajetória aponta para a referência de 50%, projeta em quantos dias cruzaria — deixado explícito como extrapolação simples, não um modelo validado.
 - **Chuva real ao vivo** — única chamada de API que roda de verdade no navegador do usuário (as demais são buscas únicas, gravadas estáticas). Usa a API gratuita e sem chave do Open-Meteo (CORS liberado) para buscar precipitação real dos últimos 7 dias e a previsão real dos próximos 7, para a coordenada real de cada trecho — funciona nas 3 rodovias, já que todas têm geometria real. Sinaliza risco elevado quando um talude com causa de erosão tem ≥20mm previstos.

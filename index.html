@@ -161,6 +161,14 @@
   .detail-stats{display:flex; gap:22px; margin:14px 0 4px; flex-wrap:wrap;}
   .stat-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-faint);}
   .stat-value{font-family:var(--font-mono); font-size:19px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums;}
+  .cut-context{
+    display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; font-size:12px; color:var(--ink-muted);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:5px 12px; margin-top:10px;
+  }
+  .cut-context b{font-size:11px; font-weight:700; color:var(--ink); white-space:nowrap;}
+  .cut-context .mono{font-weight:700; color:var(--ink);}
+  .cut-context.strict{background:var(--warning-soft); border-color:var(--warning);}
+  .cut-context.strict b{color:var(--warning);}
   .chart-wrap{margin:14px 0 10px;}
   .chart-wrap svg{width:100%; height:auto; display:block;}
   .detail-note{font-size:12.5px; color:var(--ink-muted); line-height:1.5; margin-bottom:10px;}
@@ -733,10 +741,11 @@
     }
     return pts;
   }
-  function findCrossDay(series, tipo){
+  function findCrossDay(series, tipo, causaKey){
+    const ref = tipo==='mato' ? matoRef(causaKey) : 50;
     for(const pt of series){
-      if(tipo==='mato' && pt.val>=40) return pt.day;
-      if(tipo==='talude' && pt.val<=50) return pt.day;
+      if(tipo==='mato' && pt.val>=ref) return pt.day;
+      if(tipo==='talude' && pt.val<=ref) return pt.day;
     }
     return null;
   }
@@ -756,13 +765,20 @@
       const baselineAvg = (series[0].val+series[1].val+series[2].val)/3;
       const current = series[series.length-1].val;
       let score;
-      if(tipo==='mato') score = Math.max(0,Math.min(100, Math.round((current-12)/(70-12)*100)));
+      if(tipo==='mato'){
+        // Escala proporcional ao alvo de corte deste trecho (25cm em curva/sinalização, 40cm padrão) —
+        // mesma forma da fórmula original (calibrada em 12–70 para o alvo padrão de 40), só reescalada,
+        // para que um trecho de contexto rigoroso escale para alerta mais cedo, na mesma altura relativa.
+        const ref = matoRef(causaKey);
+        const low = ref*0.3, high = ref*1.75;
+        score = Math.max(0,Math.min(100, Math.round((current-low)/(high-low)*100)));
+      }
       else score = Math.max(0,Math.min(100, Math.round((70-current)/(70-20)*100)));
       const critThresh = realSeries ? 70 : 55;
       const attnThresh = realSeries ? 45 : 25;
       let status = score>=critThresh ? 'critico' : score>=attnThresh ? 'atencao' : 'estavel';
       const causaInfo = (status==='critico'||status==='atencao') ? CAUSA[causaKey] : null;
-      const anomalyDay = (status==='critico'||status==='atencao') ? findCrossDay(series,tipo) : null;
+      const anomalyDay = (status==='critico'||status==='atencao') ? findCrossDay(series,tipo,causaKey) : null;
       return {id, tipo, kmStart:Math.round(kmStart*10)/10, kmEnd:Math.round(kmEnd*10)/10, km: Math.round((kmEnd-kmStart)*10)/10, series, current, baselineAvg, score, status, causaKey, causaInfo, anomalyDay, landmark, realData: !!realSeries};
     });
   }
@@ -772,7 +788,17 @@
   function toneVar(status){ return {critico:'var(--critical)', atencao:'var(--warning)', estavel:'var(--healthy)'}[status]; }
   function unit(tipo){ return tipo==='mato' ? 'cm' : '%'; }
   function metricLabel(tipo){ return tipo==='mato' ? 'Altura estimada' : 'Cobertura vegetal'; }
-  function threshold(tipo){ return tipo==='mato' ? 40 : 50; }
+  // Nível de corte configurável por contexto de risco: trechos de acostamento em curva/sinalização
+  // (causaKey 'visibilidade') usam alvo de altura mais rigoroso (25cm) que o padrão (40cm) — visibilidade
+  // em curva de raio reduzido ou junto a placa exige corte mais baixo do que reta aberta.
+  function matoRef(causaKey){ return causaKey==='visibilidade' ? 25 : 40; }
+  function isStrictContext(causaKey){ return causaKey==='visibilidade'; }
+  function threshold(seg){
+    const tipo = (typeof seg==='string') ? seg : seg.tipo;
+    if(tipo==='talude') return 50;
+    const causaKey = (typeof seg==='object' && seg) ? seg.causaKey : null;
+    return matoRef(causaKey);
+  }
 
   let currentKey = 'fernaodias';
   let segments = [];
@@ -870,18 +896,18 @@
   }
 
   /* ---------------- chart ---------------- */
-  function niceMinMax(values, tipo){
+  function niceMinMax(values, seg){
     let min=Math.min.apply(null,values), max=Math.max.apply(null,values);
-    min = Math.floor(Math.min(min, threshold(tipo)-8)/5)*5;
-    max = Math.ceil(Math.max(max, threshold(tipo)+8)/5)*5;
+    min = Math.floor(Math.min(min, threshold(seg)-8)/5)*5;
+    max = Math.ceil(Math.max(max, threshold(seg)+8)/5)*5;
     min = Math.max(0,min);
-    if(tipo==='talude') max = Math.min(100,max);
+    if(seg.tipo==='talude') max = Math.min(100,max);
     return [min,max];
   }
   function buildChart(seg){
     const w=520,h=170,padL=32,padR=14,padT=14,padB=24;
     const vals = seg.series.map(p=>p.val);
-    const [vmin,vmax] = niceMinMax(vals, seg.tipo);
+    const [vmin,vmax] = niceMinMax(vals, seg);
     const x = d => padL + (d/90)*(w-padL-padR);
     const y = v => (h-padB) - ((v-vmin)/(vmax-vmin))*(h-padT-padB);
     const linePts = seg.series.map(p=>x(p.day).toFixed(1)+','+y(p.val).toFixed(1)).join(' ');
@@ -896,7 +922,7 @@
       '<text x="4" y="'+(y(v)+3).toFixed(1)+'" font-size="9.5" fill="var(--ink-faint)" font-family="var(--font-mono)">'+v+'</text>'
     ).join('');
 
-    const th = threshold(seg.tipo);
+    const th = threshold(seg);
     const thSvg = '<line x1="'+padL+'" x2="'+(w-padR)+'" y1="'+y(th).toFixed(1)+'" y2="'+y(th).toFixed(1)+'" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="2,3"></line>'+
       '<text x="'+(w-padR)+'" y="'+(y(th)-4).toFixed(1)+'" font-size="9.5" fill="var(--ink-faint)" font-family="var(--font-mono)" text-anchor="end">ref. '+th+unit(seg.tipo)+'</text>';
 
@@ -958,6 +984,11 @@
         '<div><div class="stat-label">'+metricLabel(p.tipo)+'</div><div class="stat-value">'+Math.round(p.current)+unit(p.tipo)+'</div></div>'+
         '<div><div class="stat-label">Variação no período</div><div class="stat-value" style="color:'+deltaColor+'">'+deltaText+'</div></div>'+
       '</div>'+
+      (p.tipo==='mato' ? '<div class="cut-context'+(isStrictContext(p.causaKey)?' strict':'')+'">'+
+        (isStrictContext(p.causaKey)
+          ? '<b>Corte rigoroso — curva / sinalização</b>Alvo de altura: <span class="mono">25cm</span> (em vez do padrão de 40cm) — trecho com curva de raio reduzido ou placa de sinalização próxima, onde vegetação alta compromete visibilidade mais cedo.'
+          : '<b>Corte padrão</b>Alvo de altura: <span class="mono">40cm</span> — trecho sem fator de risco adicional de visibilidade identificado.')
+      +'</div>' : '')+
       '<div class="chart-wrap">'+buildChart(p)+'</div>'+
       '<div class="detail-note">'+causeLine+(p.landmark?' '+p.landmark:'')+
         (p.realData?' <em>Cobertura calculada a partir de NDVI real (Sentinel-2). O limiar de escalada para alerta desta métrica ainda não foi validado com o time de conservação local — tratado como referência, não como alerta operacional definitivo.</em>':'')+
@@ -1191,10 +1222,10 @@
       let metricText;
       if(p.tipo==='mato'){
         metricText = !crossed
-          ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — em ritmo de crescimento que deve ultrapassar o limite de '+threshold('mato')+' cm nas próximas semanas.'
+          ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — em ritmo de crescimento que deve ultrapassar o limite de '+threshold(p)+' cm nas próximas semanas.'
           : grave
-            ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — bem acima do limite de referência de '+threshold('mato')+' cm.'
-            : 'vegetação com ~'+Math.round(p.current)+' cm de altura — pouco acima do limite de referência de '+threshold('mato')+' cm; sob observação.';
+            ? 'vegetação com ~'+Math.round(p.current)+' cm de altura — bem acima do limite de referência de '+threshold(p)+' cm.'
+            : 'vegetação com ~'+Math.round(p.current)+' cm de altura — pouco acima do limite de referência de '+threshold(p)+' cm; sob observação.';
       } else {
         metricText = !crossed
           ? 'cobertura vegetal em ~'+Math.round(p.current)+'% — em queda, aproximando-se do mínimo de referência de '+threshold('talude')+'%.'
