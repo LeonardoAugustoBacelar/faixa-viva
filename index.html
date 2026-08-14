@@ -97,18 +97,17 @@
   .context-banner b{color:var(--accent);}
 
   /* ---------- layout ---------- */
+  /* Duas colunas com fluxo independente (flex), não grid-area com row-span:
+     evita espaço morto quando uma coluna acumula menos altura que a outra. */
   .layout{
     display:grid;
     grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);
-    grid-template-areas:
-      "map detail"
-      "priority detail"
-      "alerts history";
     gap:14px;
     align-items:start;
   }
+  .layout-col{display:flex; flex-direction:column; gap:14px; min-width:0;}
   @media (max-width:920px){
-    .layout{grid-template-columns:1fr; grid-template-areas:"map" "detail" "priority" "alerts" "history";}
+    .layout{grid-template-columns:1fr;}
   }
   .secondary-grid{display:grid; grid-template-columns:1.15fr 1fr 0.85fr; gap:14px; margin-top:14px;}
   @media (max-width:1180px){ .secondary-grid{grid-template-columns:1fr 1fr;} }
@@ -122,11 +121,6 @@
   .panel-head h2{font-size:14.5px; text-transform:uppercase; letter-spacing:0.04em;}
   .panel-hint{font-size:12px; color:var(--ink-faint);}
 
-  .map-panel{grid-area:map;}
-  .detail-panel{grid-area:detail;}
-  .priority-panel{grid-area:priority;}
-  .alerts-panel{grid-area:alerts;}
-  .history-panel{grid-area:history;}
 
   /* ---------- legend ---------- */
   .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-muted);}
@@ -489,46 +483,50 @@
   </div>
 
   <div class="layout">
-    <section class="panel map-panel">
-      <div class="panel-head">
-        <h2 id="mapHeading">Mapa da rodovia</h2>
-        <div class="legend" id="legend"></div>
-      </div>
-      <div class="panel-hint" id="mapHint"></div>
-      <div id="geoBadge"></div>
-      <div class="route-strip-wrap">
-        <div class="route-strip" id="routeStrip"></div>
-      </div>
-      <div class="route-ruler" id="routeRuler"></div>
-    </section>
+    <div class="layout-col">
+      <section class="panel map-panel">
+        <div class="panel-head">
+          <h2 id="mapHeading">Mapa da rodovia</h2>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="panel-hint" id="mapHint"></div>
+        <div id="geoBadge"></div>
+        <div class="route-strip-wrap">
+          <div class="route-strip" id="routeStrip"></div>
+        </div>
+        <div class="route-ruler" id="routeRuler"></div>
+      </section>
 
-    <aside class="panel detail-panel" id="detailPanel"></aside>
+      <section class="panel priority-panel">
+        <div class="panel-head">
+          <h2>Prioridade de intervenção</h2>
+          <div class="filters" id="filters"></div>
+        </div>
+        <div class="p-list" id="priorityList"></div>
+      </section>
 
-    <section class="panel priority-panel">
-      <div class="panel-head">
-        <h2>Prioridade de intervenção</h2>
-        <div class="filters" id="filters"></div>
-      </div>
-      <div class="p-list" id="priorityList"></div>
-    </section>
+      <section class="panel alerts-panel">
+        <div class="panel-head"><h2>Alertas recentes</h2></div>
+        <div class="alert-list" id="alertList"></div>
+      </section>
+    </div>
 
-    <section class="panel alerts-panel">
-      <div class="panel-head"><h2>Alertas recentes</h2></div>
-      <div class="alert-list" id="alertList"></div>
-    </section>
+    <div class="layout-col">
+      <aside class="panel detail-panel" id="detailPanel"></aside>
 
-    <section class="panel history-panel">
-      <div class="panel-head">
-        <h2>Registro de roçadas e intervenções</h2>
-        <div class="panel-head-actions"><button type="button" class="export-btn" id="exportBtn">Exportar relatório de conformidade</button></div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Data</th><th>Trecho</th><th>Causa</th><th>Ação aplicada</th><th>Resultado</th></tr></thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-      </div>
-    </section>
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <h2>Registro de roçadas e intervenções</h2>
+          <div class="panel-head-actions"><button type="button" class="export-btn" id="exportBtn">Exportar relatório de conformidade</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Trecho</th><th>Causa</th><th>Ação aplicada</th><th>Resultado</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </div>
 
   <div class="secondary-grid">
