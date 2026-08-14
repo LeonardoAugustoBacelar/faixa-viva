@@ -109,8 +109,7 @@
   @media (max-width:920px){
     .layout{grid-template-columns:1fr;}
   }
-  .secondary-grid{display:grid; grid-template-columns:1.15fr 1fr 0.85fr; gap:14px; margin-top:14px;}
-  @media (max-width:1180px){ .secondary-grid{grid-template-columns:1fr 1fr;} }
+  .secondary-grid{display:grid; grid-template-columns:1.15fr 1fr; gap:14px; margin-top:14px;}
   @media (max-width:820px){ .secondary-grid{grid-template-columns:1fr;} }
 
   .panel{
@@ -526,6 +525,12 @@
           </table>
         </div>
       </section>
+
+      <section class="panel field-app-panel">
+        <div class="panel-head"><h2>Aplicativo de campo</h2></div>
+        <div class="panel-hint">Pré-visualização do aplicativo de campo — o que a equipe de conservação recebe ao ser notificada de uma ordem de serviço emitida no painel de detalhe acima.</div>
+        <div class="field-app-wrap"><div id="fieldApp"></div></div>
+      </section>
     </div>
   </div>
 
@@ -571,12 +576,6 @@
         <li><div class="item-head"><span class="item-num">05</span><span class="item-title">Aplicativo de campo</span></div><div class="item-desc">Equipes recebem o km exato a tratar e o motivo do alerta, sem depender de inspeção visual prévia.</div></li>
         <li><div class="item-head"><span class="item-num">06</span><span class="item-title">Uso racional de recursos</span></div><div class="item-desc">Apoia metas de sustentabilidade ao reduzir deslocamento, combustível e insumos de revegetação.</div></li>
       </ul>
-    </section>
-
-    <section class="panel field-app-panel">
-      <div class="panel-head"><h2>Aplicativo de campo</h2></div>
-      <div class="panel-hint">Pré-visualização do aplicativo de campo — o que a equipe de conservação recebe ao ser notificada de uma ordem de serviço emitida no painel ao lado.</div>
-      <div class="field-app-wrap"><div id="fieldApp"></div></div>
     </section>
   </div>
 
