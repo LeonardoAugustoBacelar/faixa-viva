@@ -412,6 +412,8 @@
     border-radius:var(--radius); padding:10px 12px; font-size:12.5px; line-height:1.5;
   }
   .os-confirm b{display:block; color:var(--healthy); font-family:var(--font-mono); font-size:12.5px; margin-bottom:3px;}
+  .os-confirm.auto{background:rgba(76,158,240,0.1); border-left-color:#4C9EF0;}
+  .os-confirm.auto b{color:#4C9EF0;}
 
   /* ---------- integration list ---------- */
   .integration-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column;}
@@ -1043,6 +1045,7 @@
   }
 
   /* ---------------- real rainfall (Open-Meteo, live) ---------------- */
+  const RAIN_RISK_MM = 20; // limiar de chuva prevista (mm/7 dias) que sinaliza risco elevado em talude com erosão
   const rainCache = {}, rainError = {}, rainInFlight = {};
   async function fetchRain(rodoviaKey){
     if(rainInFlight[rodoviaKey]) return;
@@ -1067,11 +1070,25 @@
         const next7 = vals.slice(7,14).reduce((a,b)=>a+(b||0),0);
         rainCache[rodoviaKey+'|'+id] = {past7:Math.round(past7*10)/10, next7:Math.round(next7*10)/10};
       });
+      autoIssueFromRain(rodoviaKey);
     } catch(e){
       rainError[rodoviaKey] = true;
     }
     rainInFlight[rodoviaKey] = false;
-    if(rodoviaKey===currentKey) renderDetail();
+    if(rodoviaKey===currentKey){ renderDetail(); renderFieldApp(); }
+  }
+
+  /* ---------------- automation: real rain forecast -> auto-issued OS ---------------- */
+  function autoIssueFromRain(rodoviaKey){
+    if(rodoviaKey!==currentKey) return; // segments global só reflete a rodovia atualmente carregada
+    segments.forEach(p=>{
+      if(p.tipo!=='talude' || p.causaKey!=='erosao') return;
+      if(!(p.status==='critico'||p.status==='atencao')) return;
+      const rain = rainCache[osKey(p)];
+      if(!rain || rain.next7 < RAIN_RISK_MM) return;
+      if(emittedOS[osKey(p)]) return; // já tem OS (manual ou automática) — não duplica
+      issueOS(p, {auto:true, reason:rain.next7+'mm de chuva real prevista nos próximos 7 dias sobre talude com erosão já sinalizada'});
+    });
   }
   function renderRainBlock(p){
     const key = currentKey+'|'+p.id;
@@ -1082,7 +1099,7 @@
     } else if(!rain){
       body = '<div class="rain-note">Carregando chuva real ao vivo…</div>';
     } else {
-      const flagRisk = (p.tipo==='talude' && p.causaKey==='erosao' && rain.next7>=20);
+      const flagRisk = (p.tipo==='talude' && p.causaKey==='erosao' && rain.next7>=RAIN_RISK_MM);
       body = '<div class="rain-row"><span>Últimos 7 dias (real)</span><b>'+rain.past7+' mm</b></div>'+
              '<div class="rain-row"><span>Próximos 7 dias (previsão real)</span><b>'+rain.next7+' mm</b></div>'+
              (flagRisk ? '<div class="rain-flag">'+rain.next7+' mm previstos e risco de erosão já sinalizado neste talude — atenção reforçada.</div>' : '');
@@ -1102,10 +1119,11 @@
 
   /* ---------------- ordem de serviço ---------------- */
   function osKey(p){ return currentKey+'|'+p.id; }
-  function issueOS(p){
+  function issueOS(p, opts){
+    opts = opts || {};
     const numero = 'OS-'+String(Math.floor(rand()*90000+10000));
     const prazo = p.status==='critico' ? '5 dias' : '15 dias';
-    emittedOS[osKey(p)] = {numero, prazo, status:'pendente'};
+    emittedOS[osKey(p)] = {numero, prazo, status:'pendente', auto:!!opts.auto, autoReason:opts.reason||null};
   }
   function renderOSBlock(p){
     if(!p.causaInfo) return '';
@@ -1114,6 +1132,11 @@
       return '<div class="os-confirm"><b>'+existing.numero+' concluída</b>'+
         'Roçada registrada como concluída pela equipe de campo · km '+p.kmStart+'–'+p.kmEnd+'.'+
         '<div class="os-note">Simulado nesta demo — em produção, essa baixa viria do aplicativo de campo e recalibraria automaticamente a baseline do trecho.</div></div>';
+    }
+    if(existing && existing.auto){
+      return '<div class="os-confirm auto"><b>'+existing.numero+' emitida automaticamente</b>'+
+        'Disparada pelo sistema, sem clique manual — '+existing.autoReason+' · km '+p.kmStart+'–'+p.kmEnd+' · prazo sugerido: '+existing.prazo+'.'+
+        '<div class="os-note">Real: a chuva usada no gatilho é ao vivo (Open-Meteo). Simulado: o disparo automático da OS em si — em produção, integraria com o sistema de manutenção/CCO já usado pela concessionária.</div></div>';
     }
     if(existing){
       return '<div class="os-confirm"><b>'+existing.numero+' emitida</b>'+
@@ -1279,7 +1302,10 @@
         const badgeBg = p.status==='critico' ? 'var(--critical-soft)' : 'var(--warning-soft)';
         return '<div class="phone-card">'+
           '<div class="phone-card-top"><span class="phone-card-id">'+e.info.numero+' · '+p.id+'</span>'+
-          '<span class="badge" style="background:'+badgeBg+';color:'+toneVar(p.status)+';font-size:10px;">'+STATUS_LABEL[p.status]+'</span></div>'+
+          '<span style="display:flex; gap:5px;">'+
+            (e.info.auto?'<span class="badge" style="background:rgba(76,158,240,0.16);color:#4C9EF0;font-size:10px;">AUTO</span>':'')+
+            '<span class="badge" style="background:'+badgeBg+';color:'+toneVar(p.status)+';font-size:10px;">'+STATUS_LABEL[p.status]+'</span>'+
+          '</span></div>'+
           '<div class="phone-card-cause">km '+p.kmStart+'–'+p.kmEnd+' · '+(p.causaInfo?p.causaInfo.label:'')+' · prazo '+e.info.prazo+'</div>'+
           '<button type="button" class="phone-btn" data-key="'+e.key+'">Concluir roçada</button>'+
         '</div>';
